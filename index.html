@@ -25,7 +25,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
 .b-r0{background:#E6F1FB;color:#0C447C}
 .b-r1{background:#EAF3DE;color:#27500A}
 .b-rf{background:#f0f0f0;color:#222}
-.b-nd{background:#F1EFE8;color:#5F5E5A}
+.b-nd{background:#F1EFE8;color:#5F5E5A}.b-rfe{background:#FFF9C4;color:#7a6000}
 .mbtn{width:100%;padding:7px 10px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:12px;cursor:pointer;text-align:left;color:#333}
 .mbtn:hover{background:#f5f3ef}
 .mbtn.active{border-color:#378ADD;background:#E6F1FB;color:#0C447C;font-weight:500}
@@ -168,6 +168,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
       <div class="stat-row"><span class="badge b-r0">R0 Interior</span><strong id="s-r0">0</strong></div>
       <div class="stat-row"><span class="badge b-r1">R1 Interior</span><strong id="s-r1">0</strong></div>
       <div class="stat-row"><span class="badge b-rf">RF Interior ✓</span><strong id="s-rf">0</strong></div>
+      <div class="stat-row"><span class="badge b-rfe">RF Exterior ✓</span><strong id="s-rfe">0</strong></div>
       <div class="stat-row"><span class="badge b-nd">S/D</span><strong id="s-nd">283</strong></div>
     </div>
 
@@ -207,6 +208,12 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
           <rect x="2" y="2" width="24" height="16" fill="none" stroke="#bbb" stroke-width="1.5" stroke-dasharray="4,3"></rect>
         </svg>
         Sin estado
+      </button>
+      <button class="fbtn active" id="fb-rfe" onclick="toggleFilter(&#39;RFE&#39;,this)">
+        <svg width="28" height="20" style="flex-shrink:0">
+          <rect x="2" y="2" width="24" height="16" fill="rgba(245,196,0,0.15)" stroke="#F5C400" stroke-width="2.5"></rect>
+        </svg>
+        RF Exterior
       </button>
     </div>
 
@@ -341,6 +348,9 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
     <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#1a1a2e;border-radius:0 6px 6px 0">
       <span style="color:#fff;font-weight:600">RF Int.</span><strong id="ms-rf" style="color:#fff">0</strong>
     </div>
+    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#FFF9C4">
+      <span style="color:#7a6000;font-weight:600">RF Ext.</span><strong id="ms-rfe" style="color:#7a6000">0</strong>
+    </div>
     <div class="mob-stat" style="padding-left:10px">
       <span style="color:#888">S/D</span><strong id="ms-nd">0</strong>
     </div>
@@ -448,10 +458,11 @@ const STROKE_R0 = 5;  // grueso azul
 const STROKE_R1 = 3;  // ya no se usa como contorno
 const COL_R0 = '#0C447C';
 const COL_R1 = '#27500A';
+const COL_RFE = '#F5C400'; // amarillo RF exterior
 
 let houses = {}, mode = 'view', isAdmin = false, isTerreno = false;
 let lastCierreDate = ''; // fecha del último cierre (YYYY-MM-DD)
-let filters = new Set(['R0','R1','RF','ND']);
+let filters = new Set(['R0','R1','RF','ND','RFE']);
 let scale = 1, offX = 0, offY = 0;
 let panning = false, panSt = {x:0,y:0};
 let dragging = null, dragOff = {x:0,y:0};
@@ -646,6 +657,19 @@ function draw() {
 
     ctx.setLineDash([]);
     ctx.lineCap = 'butt';
+
+    // ── RF Exterior: contorno amarillo + relleno amarillo 15% opacidad ──
+    if (h.rfExt && filters.has('RFE')) {
+      tracePath();
+      ctx.fillStyle = 'rgba(245,196,0,0.15)';
+      ctx.fill();
+      tracePath();
+      ctx.strokeStyle = COL_RFE;
+      ctx.lineWidth = Math.max(2.5, 3.5*scale);
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([]);
+      ctx.stroke();
+    }
 
     // Número de vivienda
     if (h.num && scale > 0.3) {
@@ -908,6 +932,14 @@ function showCtxMenu(mx,my,h){
       showTipoModal(h);
     };
     ctxMenu.appendChild(bt);
+    // RF Exterior toggle
+    const srfe=document.createElement('div'); srfe.className='sep'; ctxMenu.appendChild(srfe);
+    const brfe=document.createElement('button');
+    brfe.style.color='#7a6000';
+    brfe.style.fontWeight=h.rfExt?'700':'400';
+    brfe.textContent=h.rfExt?'🟡 Quitar RF Exterior':'🟡 Marcar RF Exterior';
+    brfe.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{rfExt: h.rfExt ? null : true}); ctxMenu.style.display='none'; };
+    ctxMenu.appendChild(brfe);
     const en=document.createElement('button'); en.textContent='✏️ Editar número';
     en.onclick=()=>{
       const n=prompt(`Número (actual: ${h.num||'sin número'}):`,h.num||'');
@@ -1045,18 +1077,20 @@ window.toggleFilter=(f,btn)=>{
   draw();
 };
 function updateStats(){
-  const c={R0:0,R1:0,RF:0,ND:0};
+  const c={R0:0,R1:0,RF:0,ND:0,RFE:0};
   Object.values(houses).forEach(h=>{
     const rank=STATE_RANK[h.state||'ND'];
     if(rank>=1) c.R0++;
     if(rank>=2) c.R1++;
     if(rank>=3) c.RF++;
     if(rank===0) c.ND++;
+    if(h.rfExt) c.RFE++;
   });
   document.getElementById('s-total').textContent=Object.keys(houses).length;
   document.getElementById('s-r0').textContent=c.R0||0;
   document.getElementById('s-r1').textContent=c.R1||0;
   document.getElementById('s-rf').textContent=c.RF||0;
+  document.getElementById('s-rfe').textContent=c.RFE||0;
   document.getElementById('s-nd').textContent=c.ND||0;
 }
 
@@ -1070,18 +1104,20 @@ const isMobile = () => window.innerWidth <= 768;
 
 function mobileUpdateStats() {
   if (!isMobile()) return;
-  const c={R0:0,R1:0,RF:0,ND:0};
+  const c={R0:0,R1:0,RF:0,ND:0,RFE:0};
   Object.values(houses).forEach(h=>{
     const rank=STATE_RANK[h.state||'ND'];
     if(rank>=1) c.R0++;
     if(rank>=2) c.R1++;
     if(rank>=3) c.RF++;
     if(rank===0) c.ND++;
+    if(h.rfExt) c.RFE++;
   });
   document.getElementById('ms-total').textContent=Object.keys(houses).length;
   document.getElementById('ms-r0').textContent=c.R0||0;
   document.getElementById('ms-r1').textContent=c.R1||0;
   document.getElementById('ms-rf').textContent=c.RF||0;
+  document.getElementById('ms-rfe').textContent=c.RFE||0;
   document.getElementById('ms-nd').textContent=c.ND||0;
 }
 
