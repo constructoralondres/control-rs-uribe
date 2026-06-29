@@ -230,6 +230,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
       <div style="height:1px;background:#eee"></div>
       <div class="stitle">Herramientas</div>
       <button class="mbtn active" id="btn-draw" onclick="setMode(&#39;draw&#39;)">✏️ Dibujar vivienda</button>
+      <button class="mbtn" id="btn-draw-patio" onclick="setMode(&#39;draw-patio&#39;)" style="border-color:#F5C400;color:#7a6000">🟡 Dibujar RF Exterior</button>
       <button class="mbtn" id="btn-move" onclick="setMode(&#39;move&#39;)">✥ Mover vivienda</button>
       <button class="mbtn" id="btn-view" onclick="setMode(&#39;view&#39;)">👁 Solo vista</button>
       <div style="height:1px;background:#eee"></div>
@@ -466,7 +467,8 @@ let filters = new Set(['R0','R1','RF','ND','RFE']);
 let scale = 1, offX = 0, offY = 0;
 let panning = false, panSt = {x:0,y:0};
 let dragging = null, dragOff = {x:0,y:0};
-let drawPts = [], hoverHouse = null;
+let drawPts = [], hoverHouse = null, hoverPatio = null;
+let patios = {};
 let modalAction = 'pin', pendingHouse = null;
 
 const canvas = document.getElementById('overlay');
@@ -496,6 +498,14 @@ onValue(dbRef, snap => {
 }, () => {
   document.getElementById('conn-st').textContent = 'Sin conexión';
   document.getElementById('live-dot').style.background = '#e74c3c';
+});
+
+// ── Patios RF Exterior ───────────────────────────────────
+const patiosRef = ref(db, 'uribe/patios');
+onValue(patiosRef, snap => {
+  patios = snap.val() || {};
+  draw();
+  updateStats();
 });
 
 // ── Plano ─────────────────────────────────────────────
@@ -658,19 +668,6 @@ function draw() {
     ctx.setLineDash([]);
     ctx.lineCap = 'butt';
 
-    // ── RF Exterior: contorno amarillo + relleno amarillo 15% opacidad ──
-    if (h.rfExt && filters.has('RFE')) {
-      tracePath();
-      ctx.fillStyle = 'rgba(245,196,0,0.15)';
-      ctx.fill();
-      tracePath();
-      ctx.strokeStyle = COL_RFE;
-      ctx.lineWidth = Math.max(2.5, 3.5*scale);
-      ctx.lineJoin = 'round';
-      ctx.setLineDash([]);
-      ctx.stroke();
-    }
-
     // Número de vivienda
     if (h.num && scale > 0.3) {
       const cx2 = pts.reduce((a,p)=>a+p.x,0)/pts.length;
@@ -714,6 +711,29 @@ function draw() {
     });
   }
 
+  // ── Patios RF Exterior ──────────────────────────────────
+  if (filters.has('RFE')) {
+    Object.values(patios).forEach(p => {
+      if (!p.pts || p.pts.length < 3) return;
+      const ppts = p.pts.map(pt => toC(pt.x, pt.y));
+      const isHoverP = hoverPatio && hoverPatio.id === p.id;
+      function tracePatio() {
+        ctx.beginPath();
+        ppts.forEach((pt,i) => i===0 ? ctx.moveTo(pt.x,pt.y) : ctx.lineTo(pt.x,pt.y));
+        ctx.closePath();
+      }
+      tracePatio();
+      ctx.fillStyle = isHoverP ? 'rgba(245,196,0,0.30)' : 'rgba(245,196,0,0.15)';
+      ctx.fill();
+      tracePatio();
+      ctx.strokeStyle = COL_RFE;
+      ctx.lineWidth = Math.max(2.5, 3.5*scale);
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([]);
+      ctx.stroke();
+    });
+  }
+
   updateStats();
 }
 
@@ -738,7 +758,7 @@ function hitTest(cx,cy) {
 canvas.addEventListener('click', e => {
   const r=canvas.getBoundingClientRect();
   const cx=e.clientX-r.left, cy=e.clientY-r.top;
-  if(mode==='draw'&&isAdmin){
+  if((mode==='draw'||mode==='draw-patio')&&isAdmin){
     const mp=toM(cx,cy);
     if(drawPts.length>=3){
       const fp=toC(drawPts[0].x,drawPts[0].y);
@@ -753,20 +773,30 @@ canvas.addEventListener('click', e => {
 });
 
 canvas.addEventListener('dblclick', e=>{
-  if(mode==='draw'&&isAdmin&&drawPts.length>=3){ e.preventDefault(); closePoly(); }
+  if((mode==='draw'||mode==='draw-patio')&&isAdmin&&drawPts.length>=3){ e.preventDefault(); closePoly(); }
 });
 
 function closePoly(){
-  pendingHouse={pts:[...drawPts],state:'ND'};
-  drawPts=[]; hint.style.display='none';
-  showNumModal();
+  if(mode==='draw-patio'){
+    const pid='p'+Date.now();
+    set(ref(db,'uribe/patios/'+pid),{id:pid,pts:[...drawPts],rfExtDate:getTodayISO()});
+    drawPts=[]; hint.style.display='none';
+    hint.textContent='Haz clic para trazar el polígono RF Exterior';
+  } else {
+    pendingHouse={pts:[...drawPts],state:'ND'};
+    drawPts=[]; hint.style.display='none';
+    showNumModal();
+  }
 }
 
 canvas.addEventListener('contextmenu', e=>{
   e.preventDefault();
-  if(!isAdmin && !isTerreno) return; // solo lectura no puede marcar
+  if(!isAdmin && !isTerreno) return;
   const r=canvas.getBoundingClientRect();
-  const h=hitTest(e.clientX-r.left,e.clientY-r.top);
+  const cx=e.clientX-r.left, cy=e.clientY-r.top;
+  const p=hitTestPatio(cx,cy);
+  if(p && isAdmin){ showPatioCtxMenu(e.clientX,e.clientY,p); return; }
+  const h=hitTest(cx,cy);
   if(h) showCtxMenu(e.clientX,e.clientY,h);
 });
 
@@ -803,6 +833,8 @@ canvas.addEventListener('mousemove', e=>{
   }
   const h=hitTest(cx,cy);
   hoverHouse=h||null;
+  hoverPatio=hitTestPatio(cx,cy)||null;
+  if(h||hoverPatio){ draw(); }
   if(h){
     canvas.style.cursor=mode==='move'&&isAdmin?'grab':'pointer';
     const st=h.state||'ND';
@@ -932,14 +964,6 @@ function showCtxMenu(mx,my,h){
       showTipoModal(h);
     };
     ctxMenu.appendChild(bt);
-    // RF Exterior toggle
-    const srfe=document.createElement('div'); srfe.className='sep'; ctxMenu.appendChild(srfe);
-    const brfe=document.createElement('button');
-    brfe.style.color='#7a6000';
-    brfe.style.fontWeight=h.rfExt?'700':'400';
-    brfe.textContent=h.rfExt?'🟡 Quitar RF Exterior':'🟡 Marcar RF Exterior';
-    brfe.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{rfExt: h.rfExt ? null : true}); ctxMenu.style.display='none'; };
-    ctxMenu.appendChild(brfe);
     const en=document.createElement('button'); en.textContent='✏️ Editar número';
     en.onclick=()=>{
       const n=prompt(`Número (actual: ${h.num||'sin número'}):`,h.num||'');
@@ -1020,8 +1044,12 @@ window.salirAdmin=()=>{
 };
 window.setMode=m=>{
   mode=m;
-  ['draw','move','view'].forEach(x=>document.getElementById('btn-'+x)?.classList.toggle('active',x===m));
+  ['draw','move','view','draw-patio'].forEach(x=>document.getElementById('btn-'+x.replace('-',''))?document.getElementById('btn-'+x.replace('-',''))?.classList.toggle('active',x===m):null);
+  ['btn-draw','btn-move','btn-view','btn-draw-patio'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('active'); });
+  const activeBtn = document.getElementById(m==='draw-patio'?'btn-draw-patio':'btn-'+m);
+  if(activeBtn) activeBtn.classList.add('active');
   if(m==='draw'){ hint.style.display='block'; hint.textContent='Haz clic para trazar los vértices de la vivienda'; }
+  else if(m==='draw-patio'){ hint.style.display='block'; hint.textContent='Haz clic para trazar el polígono RF Exterior (patio)'; }
   else { hint.style.display='none'; drawPts=[]; }
   // Actualizar label de perfil en header
   const lbl = document.getElementById('hdr-mode');
@@ -1077,21 +1105,47 @@ window.toggleFilter=(f,btn)=>{
   draw();
 };
 function updateStats(){
-  const c={R0:0,R1:0,RF:0,ND:0,RFE:0};
+  const c={R0:0,R1:0,RF:0,ND:0};
   Object.values(houses).forEach(h=>{
     const rank=STATE_RANK[h.state||'ND'];
     if(rank>=1) c.R0++;
     if(rank>=2) c.R1++;
     if(rank>=3) c.RF++;
     if(rank===0) c.ND++;
-    if(h.rfExt) c.RFE++;
   });
   document.getElementById('s-total').textContent=Object.keys(houses).length;
   document.getElementById('s-r0').textContent=c.R0||0;
   document.getElementById('s-r1').textContent=c.R1||0;
   document.getElementById('s-rf').textContent=c.RF||0;
-  document.getElementById('s-rfe').textContent=c.RFE||0;
+  document.getElementById('s-rfe').textContent=Object.keys(patios).length;
   document.getElementById('s-nd').textContent=c.ND||0;
+}
+
+function hitTestPatio(cx,cy){
+  return Object.values(patios).find(p=>{
+    if(!p.pts||p.pts.length<3) return false;
+    const pts=p.pts.map(pt=>toC(pt.x,pt.y));
+    return pointInPoly(cx,cy,pts);
+  })||null;
+}
+
+function showPatioCtxMenu(mx,my,p){
+  ctxMenu.innerHTML='';
+  const ttl=document.createElement('div'); ttl.className='ctx-ttl';
+  ttl.textContent='Patio — RF Exterior';
+  ctxMenu.appendChild(ttl);
+  const locked = lastCierreDate && p.rfExtDate && p.rfExtDate <= lastCierreDate;
+  const dl=document.createElement('button'); dl.style.color='#c0392b';
+  if(locked){
+    dl.textContent='🔒 Bloqueado (cierre registrado)';
+    dl.style.color='#bbb'; dl.style.fontSize='11px'; dl.style.cursor='not-allowed'; dl.disabled=true;
+  } else {
+    dl.textContent='✕ Eliminar RF Exterior';
+    dl.onclick=()=>{ if(confirm('¿Eliminar este polígono RF Exterior?')) remove(ref(db,'uribe/patios/'+p.id)); ctxMenu.style.display='none'; };
+  }
+  ctxMenu.appendChild(dl);
+  ctxMenu.style.display='block';
+  ctxMenu.style.left=mx+'px'; ctxMenu.style.top=my+'px';
 }
 
 // ── Touch / Mobile ────────────────────────────────────
@@ -1104,20 +1158,19 @@ const isMobile = () => window.innerWidth <= 768;
 
 function mobileUpdateStats() {
   if (!isMobile()) return;
-  const c={R0:0,R1:0,RF:0,ND:0,RFE:0};
+  const c={R0:0,R1:0,RF:0,ND:0};
   Object.values(houses).forEach(h=>{
     const rank=STATE_RANK[h.state||'ND'];
     if(rank>=1) c.R0++;
     if(rank>=2) c.R1++;
     if(rank>=3) c.RF++;
     if(rank===0) c.ND++;
-    if(h.rfExt) c.RFE++;
   });
   document.getElementById('ms-total').textContent=Object.keys(houses).length;
   document.getElementById('ms-r0').textContent=c.R0||0;
   document.getElementById('ms-r1').textContent=c.R1||0;
   document.getElementById('ms-rf').textContent=c.RF||0;
-  document.getElementById('ms-rfe').textContent=c.RFE||0;
+  document.getElementById('ms-rfe').textContent=Object.keys(patios).length;
   document.getElementById('ms-nd').textContent=c.ND||0;
 }
 
@@ -1288,7 +1341,7 @@ onValue(cierreRef, snap => {
 });
 
 function getCounts() {
-  const c = {R0:0, R1:0, RF:0, ND:0, total:0};
+  const c = {R0:0, R1:0, RF:0, ND:0, RFE:0, total:0};
   Object.values(houses).forEach(h => {
     const rank = STATE_RANK[h.state||'ND'];
     if(rank>=1) c.R0++;
@@ -1297,6 +1350,7 @@ function getCounts() {
     if(rank===0) c.ND++;
     c.total++;
   });
+  c.RFE = Object.keys(patios).length;
   return c;
 }
 
@@ -1322,13 +1376,14 @@ window.mostrarCierreDia = async () => {
   } else {
     keyAnterior = keys.length > 0 ? keys[keys.length-1] : null;
   }
-  const anterior = keyAnterior ? cierres[keyAnterior].acumulado : {R0:0, R1:0, RF:0};
+  const anterior = keyAnterior ? cierres[keyAnterior].acumulado : {R0:0, R1:0, RF:0, RFE:0};
 
   const actual = getCounts();
   const delta = {
     R0: actual.R0 - (anterior.R0||0),
     R1: actual.R1 - (anterior.R1||0),
     RF: actual.RF - (anterior.RF||0),
+    RFE: actual.RFE - (anterior.RFE||0),
   };
 
   const warningHtml = cierreHoy ? `
@@ -1342,7 +1397,7 @@ window.mostrarCierreDia = async () => {
     ${warningHtml}
     <div style="background:#f5f3ef;border-radius:10px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:10px;text-transform:uppercase">Avance del día</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;text-align:center">
         <div style="background:#E6F1FB;border-radius:8px;padding:10px">
           <div style="font-size:11px;color:#0C447C;font-weight:600">R0 Interior</div>
           <div style="font-size:24px;font-weight:700;color:#0C447C">+${delta.R0}</div>
@@ -1355,10 +1410,14 @@ window.mostrarCierreDia = async () => {
           <div style="font-size:11px;color:#fff;font-weight:600">RF Interior</div>
           <div style="font-size:24px;font-weight:700;color:#fff">+${delta.RF}</div>
         </div>
+        <div style="background:#FFF9C4;border-radius:8px;padding:10px">
+          <div style="font-size:11px;color:#7a6000;font-weight:600">RF Exterior</div>
+          <div style="font-size:24px;font-weight:700;color:#7a6000">+${delta.RFE}</div>
+        </div>
       </div>
     </div>
     <div style="font-size:11px;color:#aaa;text-align:center">
-      Acumulado total: R0=${actual.R0} · R1=${actual.R1} · RF=${actual.RF}
+      Acumulado total: R0=${actual.R0} · R1=${actual.R1} · RF=${actual.RF} · RFE=${actual.RFE}
     </div>
   `;
 
@@ -1366,7 +1425,7 @@ window.mostrarCierreDia = async () => {
   document.getElementById('btn-confirmar-cierre').textContent = cierreHoy ? 'Reemplazar cierre de hoy' : 'Confirmar cierre';
 
   window._pendingCierre = {
-    delta, acumulado: {R0:actual.R0,R1:actual.R1,RF:actual.RF},
+    delta, acumulado: {R0:actual.R0,R1:actual.R1,RF:actual.RF,RFE:actual.RFE},
     fecha: fechaStr, ts: now.toISOString(),
     reemplazarKey: cierreHoyKey || null
   };
