@@ -450,7 +450,7 @@ const COL_R0 = '#0C447C';
 const COL_R1 = '#27500A';
 
 let houses = {}, mode = 'view', isAdmin = false, isTerreno = false;
-let lastCierreTs = 0; // timestamp del último cierre de día
+let lastCierreDate = ''; // fecha del último cierre (YYYY-MM-DD)
 let filters = new Set(['R0','R1','RF','ND']);
 let scale = 1, offX = 0, offY = 0;
 let panning = false, panSt = {x:0,y:0};
@@ -858,8 +858,9 @@ canvas.addEventListener('click', e => {
 function isLockedForTerreno(h) {
   if (!isTerreno) return false;
   if (!h.state || h.state === 'ND') return false;
-  if (h.stateTs) return h.stateTs < lastCierreTs;
-  return lastCierreTs > 0;
+  if (!lastCierreDate) return false; // sin cierres → nada bloqueado
+  if (h.stateDate) return h.stateDate <= lastCierreDate;
+  return true; // estado sin fecha (marcado antes de esta versión) → bloqueado
 }
 
 // ── Ctx menu ──────────────────────────────────────────
@@ -879,7 +880,7 @@ function showCtxMenu(mx,my,h){
       b.style.opacity='0.3';
       b.style.cursor='not-allowed';
     } else {
-      b.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:st,stateTs:Date.now()}); ctxMenu.style.display='none'; };
+      b.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:st,stateDate:getTodayISO()}); ctxMenu.style.display='none'; };
     }
     ctxMenu.appendChild(b);
   });
@@ -894,7 +895,7 @@ function showCtxMenu(mx,my,h){
   } else {
     bclear.textContent='↩ Limpiar estado';
     bclear.style.color='#888';
-    bclear.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:'ND',stateTs:null}); ctxMenu.style.display='none'; };
+    bclear.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:'ND',stateDate:null}); ctxMenu.style.display='none'; };
   }
   ctxMenu.appendChild(bclear);
   if(isAdmin){
@@ -1095,7 +1096,7 @@ window.mobileSetState = (st) => {
       return;
     }
   }
-  update(ref(db,'uribe/v2/'+h.id),{state:st,stateTs:Date.now()});
+  update(ref(db,'uribe/v2/'+h.id),{state:st,stateDate:getTodayISO()});
   document.getElementById('mobile-house-label').textContent = `Vivienda ${h.num} → marcada como ${st}`;
   setTimeout(()=>{
     document.getElementById('mobile-house-label').textContent = 'Toca una vivienda para marcar su estado';
@@ -1235,10 +1236,19 @@ window.toggleMobileFilter = (f) => {
 
 // ── Cerrar Día ────────────────────────────────────────
 const cierreRef = ref(db, 'uribe/cierres');
+function fechaToISO(f) {
+  if (!f) return '';
+  const p = f.split('/'); // DD/MM/YYYY
+  return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : '';
+}
+function getTodayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 onValue(cierreRef, snap => {
   const cierres = snap.val() || {};
   const keys = Object.keys(cierres).sort();
-  lastCierreTs = keys.length > 0 ? (cierres[keys[keys.length - 1]].ts || 0) : 0;
+  lastCierreDate = keys.length > 0 ? fechaToISO(cierres[keys[keys.length - 1]].fecha || '') : '';
 });
 
 function getCounts() {
