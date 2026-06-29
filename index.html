@@ -353,6 +353,8 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
     <button id="mfb-rf" class="mob-btn" onclick="toggleMobileFilter(&#39;RF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#1a1a2e;color:#fff;font-size:12px;border-radius:8px;border:2px solid #1a1a2e;flex-direction:column">RF Int.<span style="font-size:9px">ver</span></button>
     <button id="mfb-nd" class="mob-btn" onclick="toggleMobileFilter(&#39;ND&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#f5f3ef;color:#666;font-size:12px;border-radius:8px;border:2px solid #ccc;flex-direction:column">S/D<span style="font-size:9px">ver</span></button>
 
+    <button onclick="verHistorial()" style="flex:1;min-width:90px;padding:7px 4px;background:#f0ede6;color:#555;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:flex">📅 Historial<span style="font-size:9px">avance</span></button>
+    <button onclick="verDetalle()" style="flex:1;min-width:90px;padding:7px 4px;background:#f0ede6;color:#555;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:flex">📊 Detalle<span style="font-size:9px">tipología</span></button>
     <button id="mob-btn-cerrar" onclick="mostrarCierreDia()" style="flex:1;min-width:90px;padding:7px 4px;background:#c0392b;color:#fff;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:none">🔒 Cerrar<span style="font-size:9px">día</span></button>
     <button id="mob-btn-ingresar" onclick="requestAcceso()" style="flex:1;min-width:90px;padding:7px 4px;background:#1a1a2e;color:#fff;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:flex">🔐 Ingresar<span style="font-size:9px">perfil</span></button>
     <button id="mob-btn-salir" onclick="salirAdmin()" style="flex:1;min-width:90px;padding:7px 4px;background:#666;color:#fff;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:none">✕ Salir<span style="font-size:9px">sesión</span></button>
@@ -448,6 +450,7 @@ const COL_R0 = '#0C447C';
 const COL_R1 = '#27500A';
 
 let houses = {}, mode = 'view', isAdmin = false, isTerreno = false;
+let lastCierreTs = 0; // timestamp del último cierre de día
 let filters = new Set(['R0','R1','RF','ND']);
 let scale = 1, offX = 0, offY = 0;
 let panning = false, panSt = {x:0,y:0};
@@ -814,23 +817,85 @@ function handleWheel(e) {
 canvas.addEventListener('wheel', handleWheel, {passive:false});
 wrap.addEventListener('wheel', handleWheel, {passive:false});
 
+// ── Info popup modo lectura ───────────────────────────
+function showReadonlyInfo(mx, my, h) {
+  const existing = document.getElementById('readonly-popup');
+  if (existing) existing.remove();
+  const st = h.state || 'ND';
+  const stLabel = {R0:'R0 Interior — Revisión 0', R1:'R1 Interior — Revisión 1', RF:'RF Interior — Revisión Final', ND:'Sin estado'}[st];
+  const stColor = {R0:'#0C447C', R1:'#27500A', RF:'#222', ND:'#888'}[st];
+  const stBg   = {R0:'#E6F1FB',  R1:'#EAF3DE',  RF:'#f0f0f0', ND:'#F1EFE8'}[st];
+  const tipoObj = h.tipo ? TIPOLOGIAS.find(t => t.id === h.tipo) : null;
+  const tipoHtml = tipoObj
+    ? `<div style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:12px;color:#555"><span style="width:10px;height:10px;background:${tipoObj.color};border-radius:2px;display:inline-block;flex-shrink:0"></span>${tipoObj.label}</div>`
+    : '<div style="font-size:11px;color:#bbb;margin-top:7px">Sin tipología asignada</div>';
+  const popup = document.createElement('div');
+  popup.id = 'readonly-popup';
+  popup.style.cssText = 'position:fixed;background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px 15px;font-size:13px;z-index:1500;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:170px;pointer-events:auto';
+  const pw = 185, ph = 95;
+  let left = mx + 14, top = my - 20;
+  if (left + pw > window.innerWidth) left = mx - pw - 14;
+  if (top + ph > window.innerHeight) top = my - ph - 10;
+  if (top < 8) top = 8;
+  popup.style.left = left + 'px';
+  popup.style.top = top + 'px';
+  popup.innerHTML = `<div style="font-weight:700;color:#1a1a2e;margin-bottom:7px">Vivienda ${h.num||'?'}</div><div><span style="background:${stBg};color:${stColor};padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600">${stLabel}</span></div>${tipoHtml}`;
+  document.body.appendChild(popup);
+  setTimeout(() => {
+    const close = e => { if (!popup.contains(e.target)) { popup.remove(); document.removeEventListener('click', close); document.removeEventListener('touchend', close); } };
+    document.addEventListener('click', close);
+    document.addEventListener('touchend', close);
+  }, 80);
+}
+
+canvas.addEventListener('click', e => {
+  if (isAdmin || isTerreno) return;
+  const r = canvas.getBoundingClientRect();
+  const h = hitTest(e.clientX - r.left, e.clientY - r.top);
+  if (h) showReadonlyInfo(e.clientX, e.clientY, h);
+});
+
+function isLockedForTerreno(h) {
+  if (!isTerreno) return false;
+  if (!h.state || h.state === 'ND') return false;
+  if (h.stateTs) return h.stateTs < lastCierreTs;
+  return lastCierreTs > 0;
+}
+
 // ── Ctx menu ──────────────────────────────────────────
 function showCtxMenu(mx,my,h){
   ctxMenu.innerHTML='';
   const ttl=document.createElement('div'); ttl.className='ctx-ttl';
   ttl.textContent=`Vivienda ${h.num||'?'}`;
   ctxMenu.appendChild(ttl);
+  const locked = isLockedForTerreno(h);
   [['R0','🔵 Marcar R0'],['R1','🟢 Marcar R1'],['RF','✅ Marcar RF']].forEach(([st,label])=>{
     const b=document.createElement('button');
+    const isDowngrade = STATE_RANK[st] <= STATE_RANK[h.state||'ND'];
+    const isDisabled = locked && isDowngrade;
     b.innerHTML=(h.state===st?'<strong>':'')+label+(h.state===st?'</strong>':'');
-    b.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:st}); ctxMenu.style.display='none'; };
+    if(isDisabled){
+      b.disabled=true;
+      b.style.opacity='0.3';
+      b.style.cursor='not-allowed';
+    } else {
+      b.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:st,stateTs:Date.now()}); ctxMenu.style.display='none'; };
+    }
     ctxMenu.appendChild(b);
   });
   const sep0=document.createElement('div'); sep0.className='sep'; ctxMenu.appendChild(sep0);
   const bclear=document.createElement('button');
-  bclear.textContent='↩ Limpiar estado';
-  bclear.style.color='#888';
-  bclear.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:'ND'}); ctxMenu.style.display='none'; };
+  if(locked){
+    bclear.textContent='🔒 Bloqueado (cierre de día registrado)';
+    bclear.style.color='#bbb';
+    bclear.style.fontSize='11px';
+    bclear.style.cursor='not-allowed';
+    bclear.disabled=true;
+  } else {
+    bclear.textContent='↩ Limpiar estado';
+    bclear.style.color='#888';
+    bclear.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:'ND',stateTs:null}); ctxMenu.style.display='none'; };
+  }
   ctxMenu.appendChild(bclear);
   if(isAdmin){
     const s=document.createElement('div'); s.className='sep'; ctxMenu.appendChild(s);
@@ -1021,8 +1086,17 @@ function mobileUpdateStats() {
 
 window.mobileSetState = (st) => {
   if (!mobileSelected) return;
-  update(ref(db,'uribe/v2/'+mobileSelected.id),{state:st});
-  document.getElementById('mobile-house-label').textContent = `Vivienda ${mobileSelected.num} → marcada como ${st}`;
+  const h = mobileSelected;
+  if (isLockedForTerreno(h)) {
+    const currentRank = STATE_RANK[h.state || 'ND'];
+    const newRank = STATE_RANK[st] || 0;
+    if (newRank <= currentRank) {
+      showToast('⛔ Estado bloqueado: solo puedes subir de nivel', '#c0392b');
+      return;
+    }
+  }
+  update(ref(db,'uribe/v2/'+h.id),{state:st,stateTs:Date.now()});
+  document.getElementById('mobile-house-label').textContent = `Vivienda ${h.num} → marcada como ${st}`;
   setTimeout(()=>{
     document.getElementById('mobile-house-label').textContent = 'Toca una vivienda para marcar su estado';
     mobileSelected = null;
@@ -1108,6 +1182,12 @@ canvas.addEventListener('touchend', e => {
   clearTimeout(longPressTimer);
   longPressTimer = null;
   if (e.touches.length < 2) pinchDist0 = null;
+  if (!touchMoved && !isAdmin && !isTerreno && e.changedTouches.length === 1) {
+    const t = e.changedTouches[0];
+    const r = canvas.getBoundingClientRect();
+    const h = hitTest(t.clientX - r.left, t.clientY - r.top);
+    if (h) showReadonlyInfo(t.clientX, t.clientY, h);
+  }
 });
 
 function showMobileMenu(mx, my, h) {
@@ -1155,6 +1235,11 @@ window.toggleMobileFilter = (f) => {
 
 // ── Cerrar Día ────────────────────────────────────────
 const cierreRef = ref(db, 'uribe/cierres');
+onValue(cierreRef, snap => {
+  const cierres = snap.val() || {};
+  const keys = Object.keys(cierres).sort();
+  lastCierreTs = keys.length > 0 ? (cierres[keys[keys.length - 1]].ts || 0) : 0;
+});
 
 function getCounts() {
   const c = {R0:0, R1:0, RF:0, ND:0, total:0};
