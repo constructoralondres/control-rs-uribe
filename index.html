@@ -1646,10 +1646,10 @@ window.verHistorial = async () => {
   }
   const todayISO = new Date().toISOString().slice(0,10);
   const ROWS = [
-    { key:'R0',  label:'R0 int.',  bg:'#E6F1FB', color:'#0C447C' },
-    { key:'R1',  label:'R1 int.',  bg:'#EAF3DE', color:'#27500A' },
-    { key:'RF',  label:'RF int.',  bg:'#1a1a2e', color:'#ffffff' },
-    { key:'RFE', label:'RF ext.',  bg:'#FFF9C4', color:'#7a6000' },
+    { key:'R0',  label:'R0 int.',  bg:'#E6F1FB', color:'#0C447C', cellColor:'#0C447C' },
+    { key:'R1',  label:'R1 int.',  bg:'#EAF3DE', color:'#27500A', cellColor:'#27500A' },
+    { key:'RF',  label:'RF int.',  bg:'#1a1a2e', color:'#ffffff', cellColor:'#1a1a2e' },
+    { key:'RFE', label:'RF ext.',  bg:'#FFF9C4', color:'#7a6000', cellColor:'#7a6000' },
   ];
   let html = '';
   weeks.forEach(mondayISO => {
@@ -1677,7 +1677,7 @@ window.verHistorial = async () => {
         } else {
           const val = c.delta?.[row.key] ?? 0;
           const disp = val > 0 ? `+${val}` : `${val}`;
-          html += `<td style="padding:6px 4px;text-align:center;border:1px solid #eee;font-weight:${val>0?'700':'400'};color:${val>0?row.color:'#888'};background:${ri%2===1?'#fafafa':'#fff'}">${disp}</td>`;
+          html += `<td style="padding:6px 4px;text-align:center;border:1px solid #eee;font-weight:${val>0?'700':'400'};color:${val>0?row.cellColor:'#888'};background:${ri%2===1?'#fafafa':'#fff'}">${disp}</td>`;
         }
       });
       html += '</tr>';
