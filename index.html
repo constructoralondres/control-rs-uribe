@@ -927,6 +927,8 @@ function isLockedForTerreno(h) {
   if (!isTerreno) return false;
   if (!h.state || h.state === 'ND') return false;
   if (!lastCierreDate) return false; // sin cierres → nada bloqueado
+  const today = getTodayISO();
+  if (h.stateDate && h.stateDate >= today) return false; // hoy nunca bloqueado
   if (h.stateDate) return h.stateDate <= lastCierreDate;
   return true; // estado sin fecha (marcado antes de esta versión) → bloqueado
 }
@@ -1146,7 +1148,8 @@ function showPatioCtxMenu(mx,my,p){
   const ttl=document.createElement('div'); ttl.className='ctx-ttl';
   ttl.textContent='Patio — RF Exterior';
   ctxMenu.appendChild(ttl);
-  const locked = isTerreno && lastCierreDate && p.rfExtDate && p.rfExtDate <= lastCierreDate;
+  const today = getTodayISO();
+  const locked = isTerreno && lastCierreDate && p.rfExtDate && p.rfExtDate < today && p.rfExtDate <= lastCierreDate;
   // Botón marcar / desmarcar RF Exterior
   const bmrk=document.createElement('button');
   if(p.rfExt){
