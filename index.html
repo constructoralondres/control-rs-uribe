@@ -806,10 +806,10 @@ canvas.addEventListener('contextmenu', e=>{
   if(!isAdmin && !isTerreno) return;
   const r=canvas.getBoundingClientRect();
   const cx=e.clientX-r.left, cy=e.clientY-r.top;
-  const p=hitTestPatio(cx,cy);
-  if(p && (isAdmin||isTerreno)){ showPatioCtxMenu(e.clientX,e.clientY,p); return; }
   const h=hitTest(cx,cy);
-  if(h) showCtxMenu(e.clientX,e.clientY,h);
+  if(h){ showCtxMenu(e.clientX,e.clientY,h); return; }
+  const p=hitTestPatio(cx,cy);
+  if(p && (isAdmin||isTerreno)){ showPatioCtxMenu(e.clientX,e.clientY,p); }
 });
 
 canvas.addEventListener('mousedown', e=>{
