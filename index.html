@@ -1636,8 +1636,9 @@ window.verHistorial = async () => {
     d.setDate(d.getDate() + n);
     return d.toISOString().slice(0,10);
   }
-  // Recopilar semanas con datos
+  // Recopilar semanas con datos + siempre incluir la semana actual
   const weekSet = new Set(dates.map(d => getMondayOf(d)));
+  weekSet.add(getMondayOf(todayISO)); // semana actual siempre visible
   const weeks = Array.from(weekSet).sort().reverse();
   const DAY_NAMES = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
   function fmtDate(iso) {
