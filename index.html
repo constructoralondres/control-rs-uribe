@@ -523,15 +523,7 @@ function resetView() {
   offY = (wh - IMG_H*scale)/2;
   applyTransform();
 }
-function clampView() {
-  const ww = wrap.clientWidth, wh = wrap.clientHeight;
-  const iw = IMG_W * scale, ih = IMG_H * scale;
-  const margin = 80; // mínimo 80px del plano siempre visible
-  offX = Math.max(margin - iw, Math.min(ww - margin, offX));
-  offY = Math.max(margin - ih, Math.min(wh - margin, offY));
-}
 function applyTransform() {
-  clampView();
   mapImg.style.transform = `translate(${offX}px,${offY}px) scale(${scale})`;
   canvas.width = wrap.clientWidth;
   canvas.height = wrap.clientHeight;
@@ -742,9 +734,9 @@ function draw() {
         ctx.setLineDash([]);
         ctx.stroke();
       } else {
-        // Sin marcar: solo contorno punteado amarillo
+        // Sin marcar: contorno punteado negro
         tracePatio();
-        ctx.strokeStyle = COL_RFE;
+        ctx.strokeStyle = '#333';
         ctx.lineWidth = Math.max(1.5, 2*scale);
         ctx.lineJoin = 'round';
         ctx.setLineDash([6, 5]);
@@ -1282,8 +1274,8 @@ canvas.addEventListener('touchmove', e => {
       e.touches[0].clientY - e.touches[1].clientY
     );
     const factor = dist / pinchDist0;
-    const rawScale = pinchOff0.scale0 * factor;
-    const newScale = Math.max(getMinScale(), Math.min(20, rawScale));
+    const newScale = pinchOff0.scale0 * factor;
+    if (newScale < getMinScale()) return;
     scale = newScale;
     offX = pinchOff0.cx - (pinchOff0.cx - pinchOff0.offX) * (newScale / pinchOff0.scale0);
     offY = pinchOff0.cy - (pinchOff0.cy - pinchOff0.offY) * (newScale / pinchOff0.scale0);
@@ -1306,11 +1298,6 @@ canvas.addEventListener('touchend', e => {
   if (!isMobile()) return;
   clearTimeout(longPressTimer);
   longPressTimer = null;
-  // Al soltar un dedo del pinch, recalibrar panSt con el dedo restante
-  if (pinchDist0 !== null && e.touches.length === 1) {
-    touchMoved = true;
-    panSt = { x: e.touches[0].clientX - offX, y: e.touches[0].clientY - offY };
-  }
   if (e.touches.length < 2) pinchDist0 = null;
   if (!touchMoved && !isAdmin && !isTerreno && e.changedTouches.length === 1) {
     const t = e.changedTouches[0];
