@@ -231,6 +231,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
       <div class="stitle">Herramientas</div>
       <button class="mbtn active" id="btn-draw" onclick="setMode(&#39;draw&#39;)">✏️ Dibujar vivienda</button>
       <button class="mbtn" id="btn-draw-patio" onclick="setMode(&#39;draw-patio&#39;)" style="border-color:#F5C400;color:#7a6000">🟡 Dibujar RF Exterior</button>
+      <button class="mbtn" id="btn-paste-patio" onclick="setMode(&#39;paste-patio&#39;)" style="display:none;border-color:#F5C400;color:#7a6000">📋 Pegar patio</button>
       <button class="mbtn" id="btn-move" onclick="setMode(&#39;move&#39;)">✥ Mover vivienda</button>
       <button class="mbtn" id="btn-view" onclick="setMode(&#39;view&#39;)">👁 Solo vista</button>
       <div style="height:1px;background:#eee"></div>
@@ -469,6 +470,7 @@ let panning = false, panSt = {x:0,y:0};
 let dragging = null, dragOff = {x:0,y:0};
 let drawPts = [], hoverHouse = null, hoverPatio = null;
 let patios = {};
+let copiedPatio = null;
 let modalAction = 'pin', pendingHouse = null;
 
 const canvas = document.getElementById('overlay');
@@ -506,6 +508,7 @@ onValue(patiosRef, snap => {
   patios = snap.val() || {};
   draw();
   updateStats();
+  mobileUpdateStats();
 });
 
 // ── Plano ─────────────────────────────────────────────
@@ -770,6 +773,16 @@ function hitTest(cx,cy) {
 canvas.addEventListener('click', e => {
   const r=canvas.getBoundingClientRect();
   const cx=e.clientX-r.left, cy=e.clientY-r.top;
+  if(mode==='paste-patio'&&isAdmin&&copiedPatio){
+    const mp=toM(cx,cy);
+    const cxc=copiedPatio.reduce((s,p)=>s+p.x,0)/copiedPatio.length;
+    const cyc=copiedPatio.reduce((s,p)=>s+p.y,0)/copiedPatio.length;
+    const dx=mp.x-cxc, dy=mp.y-cyc;
+    const newPts=copiedPatio.map(p=>({x:p.x+dx,y:p.y+dy}));
+    const pid='p'+Date.now();
+    set(ref(db,'uribe/patios/'+pid),{id:pid,pts:newPts,rfExt:false});
+    return;
+  }
   if((mode==='draw'||mode==='draw-patio')&&isAdmin){
     const mp=toM(cx,cy);
     if(drawPts.length>=3){
@@ -993,6 +1006,9 @@ function showCtxMenu(mx,my,h){
   ctxMenu.style.left=mx+'px'; ctxMenu.style.top=my+'px';
 }
 document.addEventListener('click',()=>ctxMenu.style.display='none');
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&mode==='paste-patio'){ setMode('view'); }
+});
 
 // ── Modal ─────────────────────────────────────────────
 window.requestAcceso=()=>{
@@ -1059,11 +1075,12 @@ window.salirAdmin=()=>{
 window.setMode=m=>{
   mode=m;
   ['draw','move','view','draw-patio'].forEach(x=>document.getElementById('btn-'+x.replace('-',''))?document.getElementById('btn-'+x.replace('-',''))?.classList.toggle('active',x===m):null);
-  ['btn-draw','btn-move','btn-view','btn-draw-patio'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('active'); });
-  const activeBtn = document.getElementById(m==='draw-patio'?'btn-draw-patio':'btn-'+m);
+  ['btn-draw','btn-move','btn-view','btn-draw-patio','btn-paste-patio'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('active'); });
+  const activeBtn = document.getElementById(m==='draw-patio'?'btn-draw-patio':m==='paste-patio'?'btn-paste-patio':'btn-'+m);
   if(activeBtn) activeBtn.classList.add('active');
   if(m==='draw'){ hint.style.display='block'; hint.textContent='Haz clic para trazar los vértices de la vivienda'; }
   else if(m==='draw-patio'){ hint.style.display='block'; hint.textContent='Haz clic para trazar el polígono RF Exterior (patio)'; }
+  else if(m==='paste-patio'){ hint.style.display='block'; hint.textContent='📋 Haz clic donde quieres pegar el patio copiado (Esc para cancelar)'; }
   else { hint.style.display='none'; drawPts=[]; }
   // Actualizar label de perfil en header
   const lbl = document.getElementById('hdr-mode');
@@ -1167,6 +1184,18 @@ function showPatioCtxMenu(mx,my,p){
     bmrk.onclick=()=>{ update(ref(db,'uribe/patios/'+p.id),{rfExt:true,rfExtDate:getTodayISO()}); ctxMenu.style.display='none'; };
   }
   ctxMenu.appendChild(bmrk);
+  const sepc=document.createElement('div'); sepc.className='sep'; ctxMenu.appendChild(sepc);
+  const bcopy=document.createElement('button');
+  bcopy.innerHTML='📋 Copiar forma';
+  bcopy.style.color='#7a6000'; bcopy.style.fontWeight='bold';
+  bcopy.onclick=()=>{
+    copiedPatio=[...p.pts];
+    const btn=document.getElementById('btn-paste-patio');
+    if(btn) btn.style.display='';
+    setMode('paste-patio');
+    ctxMenu.style.display='none';
+  };
+  ctxMenu.appendChild(bcopy);
   if(isAdmin){
     const sep=document.createElement('div'); sep.className='sep'; ctxMenu.appendChild(sep);
     const dl=document.createElement('button'); dl.style.color='#c0392b';
@@ -1637,15 +1666,22 @@ window.verHistorial = async () => {
     return d.toISOString().slice(0,10);
   }
   // Recopilar semanas con datos + siempre incluir la semana actual
+  const todayISO = getTodayISO();
   const weekSet = new Set(dates.map(d => getMondayOf(d)));
   weekSet.add(getMondayOf(todayISO)); // semana actual siempre visible
-  const weeks = Array.from(weekSet).sort().reverse();
+  const weeks = Array.from(weekSet).sort(); // ascendente: semana más reciente abajo
+  const currentWeekMonday = getMondayOf(todayISO);
+  const FERIADOS_CL = new Set([
+    '2026-01-01','2026-01-02','2026-04-03','2026-04-04',
+    '2026-05-01','2026-05-21','2026-06-21','2026-06-29',
+    '2026-07-16','2026-08-15','2026-09-18','2026-09-19',
+    '2026-10-12','2026-10-31','2026-11-01','2026-12-08','2026-12-25'
+  ]);
   const DAY_NAMES = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
   function fmtDate(iso) {
     const [y,m,d] = iso.split('-');
     return `${d}-${m}-${y}`;
   }
-  const todayISO = new Date().toISOString().slice(0,10);
   const ROWS = [
     { key:'R0',  label:'R0 int.',  bg:'#E6F1FB', color:'#0C447C', cellColor:'#0C447C' },
     { key:'R1',  label:'R1 int.',  bg:'#EAF3DE', color:'#27500A', cellColor:'#27500A' },
@@ -1655,15 +1691,17 @@ window.verHistorial = async () => {
   let html = '';
   weeks.forEach(mondayISO => {
     const weekDates = Array.from({length:5}, (_,i) => addDays(mondayISO, i));
-    if (!weekDates.some(d => byDate[d])) return;
+    if (!weekDates.some(d => byDate[d]) && mondayISO !== currentWeekMonday) return;
     html += `<table style="width:100%;border-collapse:collapse;margin-bottom:18px;font-size:11px">
       <thead><tr style="background:#f5f3ef">
         <th style="padding:5px 7px;text-align:left;color:#888;font-weight:600;border:1px solid #eee;width:68px"> </th>`;
     weekDates.forEach((iso, i) => {
       const isToday = iso === todayISO;
-      html += `<th style="padding:4px 3px;text-align:center;color:${isToday?'#0C447C':'#666'};font-weight:600;border:1px solid #eee;min-width:56px;background:${isToday?'#E6F1FB':'#f5f3ef'}">
+      const isHol = FERIADOS_CL.has(iso);
+      html += `<th style="padding:4px 3px;text-align:center;color:${isToday?'#0C447C':'#666'};font-weight:600;border:1px solid #eee;min-width:56px;background:${isToday?'#E6F1FB':isHol?'#fff8e1':'#f5f3ef'}">
         <div style="font-size:10px">${DAY_NAMES[i]}</div>
         <div style="font-weight:400;font-size:9px;color:#aaa;white-space:nowrap">${fmtDate(iso)}</div>
+        ${isHol ? '<div style="font-size:8px;font-weight:700;color:#b8860b">FERIADO</div>' : ''}
       </th>`;
     });
     html += '</tr></thead><tbody>';
@@ -1673,7 +1711,10 @@ window.verHistorial = async () => {
       weekDates.forEach(iso => {
         const c = byDate[iso];
         const isFuture = iso > todayISO;
-        if (isFuture || !c) {
+        const isFeriado = FERIADOS_CL.has(iso);
+        if (!c && isFeriado) {
+          html += `<td style="padding:6px 4px;text-align:center;border:1px solid #eee;background:#fff8e1"><b style="font-size:9px;color:#b8860b">FERIADO</b></td>`;
+        } else if (isFuture || !c) {
           html += `<td style="padding:6px 4px;text-align:center;border:1px solid #eee;color:#ddd;background:${ri%2===1?'#fafafa':'#fff'}">—</td>`;
         } else {
           const val = c.delta?.[row.key] ?? 0;
