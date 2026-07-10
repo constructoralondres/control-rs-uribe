@@ -1544,7 +1544,7 @@ window.mostrarCierreDia = async () => {
   const delta = {
     R0: actual.R0 - (anterior.R0||0),
     R1: actual.R1 - (anterior.R1||0),
-    RFF: actual.RFF - (anterior.RFF||0),
+    RFF: actual.RFF - ((anterior.RFF !== undefined ? anterior.RFF : anterior.RF) || 0), // cierres previos a RF fichaje: se asume que ocurrio junto con RF recibida
     RF: actual.RF - (anterior.RF||0),
     RFE: actual.RFE - (anterior.RFE||0),
   };
@@ -1786,6 +1786,20 @@ window.verHistorial = async () => {
     { key:'RF',  label:'RF int. (recibida)',  bg:'#1a1a2e', color:'#ffffff', cellColor:'#1a1a2e' },
     { key:'RFE', label:'RF ext. (recibido)',  bg:'#FFF9C4', color:'#7a6000', cellColor:'#7a6000' },
   ];
+  // Registros de cierre anteriores a "RF fichaje" no tienen ese campo — se asume que
+  // ese avance ocurrió junto con "RF recibida" (antes eran el mismo paso).
+  function deltaVal(c, key) {
+    if (!c || !c.delta) return 0;
+    if (c.delta[key] !== undefined) return c.delta[key];
+    if (key === 'RFF') return c.delta.RF ?? 0;
+    return 0;
+  }
+  function acumVal(c, key) {
+    if (!c || !c.acumulado) return undefined;
+    if (c.acumulado[key] !== undefined) return c.acumulado[key];
+    if (key === 'RFF') return c.acumulado.RF;
+    return undefined;
+  }
   let html = '';
   weeks.forEach(mondayISO => {
     const weekDates = Array.from({length:5}, (_,i) => addDays(mondayISO, i));
@@ -1794,7 +1808,7 @@ window.verHistorial = async () => {
     const closedDates = weekDates.filter(d => byDate[d]);
     const weekAvg = {};
     ROWS.forEach(row => {
-      const total = closedDates.reduce((s,d) => s + (byDate[d].delta?.[row.key] ?? 0), 0);
+      const total = closedDates.reduce((s,d) => s + deltaVal(byDate[d], row.key), 0);
       weekAvg[row.key] = closedDates.length > 0 ? total / closedDates.length : 0;
     });
     html += `<table style="width:100%;border-collapse:collapse;margin-bottom:18px;font-size:11px">
@@ -1826,7 +1840,7 @@ window.verHistorial = async () => {
         } else if (isFuture || !c) {
           html += `<td style="padding:6px 4px;text-align:center;border:1px solid #eee;color:#ddd;background:${ri%2===1?'#fafafa':'#fff'}">—</td>`;
         } else {
-          const val = c.delta?.[row.key] ?? 0;
+          const val = deltaVal(c, row.key);
           const disp = val > 0 ? `+${val}` : `${val}`;
           html += `<td style="padding:6px 4px;text-align:center;border:1px solid #eee;font-weight:${val>0?'700':'400'};color:${val>0?row.cellColor:'#888'};background:${ri%2===1?'#fafafa':'#fff'}">${disp}</td>`;
         }
@@ -1843,7 +1857,7 @@ window.verHistorial = async () => {
         html += `<td style="padding:4px;border:1px solid #eee"></td>`;
       } else {
         html += `<td style="padding:4px 3px;text-align:center;font-size:9px;color:#aaa;border:1px solid #eee;line-height:1.3">
-          <span>${c.acumulado?.R0??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.R1??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RFF??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RF??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RFE??'—'}</span>
+          <span>${c.acumulado?.R0??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.R1??'—'}</span><span style="color:#ddd">/</span><span>${acumVal(c,'RFF')??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RF??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RFE??'—'}</span>
         </td>`;
       }
     });
@@ -1960,7 +1974,7 @@ function capturarPantalla() {
       const lastKey = labKeys.length > 0 ? labKeys[labKeys.length-1] : null;
       const anterior = lastKey ? cierres[lastKey].acumulado : {R0:0,R1:0,RFF:0,RF:0,RFE:0};
       const actual = getCounts();
-      const delta = { R0: actual.R0-(anterior.R0||0), R1: actual.R1-(anterior.R1||0), RFF: actual.RFF-(anterior.RFF||0), RF: actual.RF-(anterior.RF||0), RFE: actual.RFE-(anterior.RFE||0) };
+      const delta = { R0: actual.R0-(anterior.R0||0), R1: actual.R1-(anterior.R1||0), RFF: actual.RFF-((anterior.RFF !== undefined ? anterior.RFF : anterior.RF) || 0), RF: actual.RF-(anterior.RF||0), RFE: actual.RFE-(anterior.RFE||0) };
       await fbPush(cierreRef, {
         delta, acumulado: {R0:actual.R0,R1:actual.R1,RFF:actual.RFF,RF:actual.RF,RFE:actual.RFE},
         fecha: fechaStr, ts: now.toISOString(), auto: true
