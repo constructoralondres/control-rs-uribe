@@ -168,8 +168,8 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
       <div class="stat-row"><span style="color:#666;font-size:12px">Total viviendas</span><strong id="s-total">283</strong></div>
       <div class="stat-row"><span class="badge b-r0">R0 Interior</span><strong id="s-r0">0</strong></div>
       <div class="stat-row"><span class="badge b-r1">R1 Interior</span><strong id="s-r1">0</strong></div>
-      <div class="stat-row"><span class="badge b-rff">RF Fichaje</span><strong id="s-rff">0</strong></div>
-      <div class="stat-row"><span class="badge b-rf">RF Recibida ✓</span><strong id="s-rf">0</strong></div>
+      <div class="stat-row"><span class="badge b-rff">RF Interior Fichaje</span><strong id="s-rff">0</strong></div>
+      <div class="stat-row"><span class="badge b-rf">RF Interior Recibida ✓</span><strong id="s-rf">0</strong></div>
       <div class="stat-row"><span class="badge b-rfe">RF Exterior ✓</span><strong id="s-rfe">0</strong></div>
       <div class="stat-row"><span class="badge b-nd">S/D</span><strong id="s-nd">283</strong></div>
     </div>
@@ -202,7 +202,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
           <rect x="2" y="2" width="24" height="16" fill="rgba(108,42,140,0.15)" stroke="#6C2A8C" stroke-width="2.5"></rect>
           <circle cx="14" cy="10" r="5" fill="none" stroke="#6C2A8C" stroke-width="1.5"></circle>
         </svg>
-        RF Fichaje
+        RF Interior Fichaje
       </button>
       <button class="fbtn active" id="fb-rf" onclick="toggleFilter(&#39;RF&#39;,this)">
         <svg width="28" height="20" style="flex-shrink:0">
@@ -210,7 +210,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
           <circle cx="14" cy="10" r="5" fill="white" stroke="#111" stroke-width="1.5"></circle>
           <polyline points="10.5,10 13,13 17.5,7" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
         </svg>
-        RF Recibida
+        RF Interior Recibida
       </button>
       <button class="fbtn active" id="fb-nd" onclick="toggleFilter(&#39;ND&#39;,this)">
         <svg width="28" height="20" style="flex-shrink:0">
@@ -357,10 +357,10 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
       <span style="color:#27500A;font-weight:600">R1 Int.</span><strong id="ms-r1" style="color:#27500A">0</strong>
     </div>
     <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#F1E6F8">
-      <span style="color:#6C2A8C;font-weight:600">RFF Int.</span><strong id="ms-rff" style="color:#6C2A8C">0</strong>
+      <span style="color:#6C2A8C;font-weight:600">RF Fich.</span><strong id="ms-rff" style="color:#6C2A8C">0</strong>
     </div>
     <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#1a1a2e;border-radius:0 6px 6px 0">
-      <span style="color:#fff;font-weight:600">RF Int.</span><strong id="ms-rf" style="color:#fff">0</strong>
+      <span style="color:#fff;font-weight:600">RF Recib.</span><strong id="ms-rf" style="color:#fff">0</strong>
     </div>
     <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#FFF9C4">
       <span style="color:#7a6000;font-weight:600">RF Ext.</span><strong id="ms-rfe" style="color:#7a6000">0</strong>
@@ -374,9 +374,10 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
   <div id="mobile-actions" style="flex-wrap:wrap;gap:6px;padding:6px 12px 10px">
     <button id="mfb-r0" class="mob-btn" onclick="toggleMobileFilter(&#39;R0&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#E6F1FB;color:#0C447C;font-size:12px;border-radius:8px;border:2px solid #0C447C;flex-direction:column">R0 Int.<span style="font-size:9px">ver</span></button>
     <button id="mfb-r1" class="mob-btn" onclick="toggleMobileFilter(&#39;R1&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#EAF3DE;color:#27500A;font-size:12px;border-radius:8px;border:2px solid #27500A;flex-direction:column">R1 Int.<span style="font-size:9px">ver</span></button>
-    <button id="mfb-rff" class="mob-btn" onclick="toggleMobileFilter(&#39;RFF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#F1E6F8;color:#6C2A8C;font-size:12px;border-radius:8px;border:2px solid #6C2A8C;flex-direction:column">RFF Int.<span style="font-size:9px">ver</span></button>
-    <button id="mfb-rf" class="mob-btn" onclick="toggleMobileFilter(&#39;RF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#1a1a2e;color:#fff;font-size:12px;border-radius:8px;border:2px solid #1a1a2e;flex-direction:column">RF Int.<span style="font-size:9px">ver</span></button>
+    <button id="mfb-rff" class="mob-btn" onclick="toggleMobileFilter(&#39;RFF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#F1E6F8;color:#6C2A8C;font-size:12px;border-radius:8px;border:2px solid #6C2A8C;flex-direction:column">RF Fich.<span style="font-size:9px">ver</span></button>
+    <button id="mfb-rf" class="mob-btn" onclick="toggleMobileFilter(&#39;RF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#1a1a2e;color:#fff;font-size:12px;border-radius:8px;border:2px solid #1a1a2e;flex-direction:column">RF Recib.<span style="font-size:9px">ver</span></button>
     <button id="mfb-nd" class="mob-btn" onclick="toggleMobileFilter(&#39;ND&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#f5f3ef;color:#666;font-size:12px;border-radius:8px;border:2px solid #ccc;flex-direction:column">S/D<span style="font-size:9px">ver</span></button>
+    <button id="mfb-rfe" class="mob-btn" onclick="toggleMobileFilter(&#39;RFE&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#FFF9C4;color:#7a6000;font-size:12px;border-radius:8px;border:2px solid #7a6000;flex-direction:column">RF Ext.<span style="font-size:9px">ver</span></button>
 
     <button onclick="verHistorial()" style="flex:1;min-width:90px;padding:7px 4px;background:#f0ede6;color:#555;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:flex">📅 Historial<span style="font-size:9px">avance</span></button>
     <button onclick="verDetalle()" style="flex:1;min-width:90px;padding:7px 4px;background:#f0ede6;color:#555;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:flex">📊 Detalle<span style="font-size:9px">tipología</span></button>
@@ -1032,7 +1033,7 @@ function showCtxMenu(mx,my,h){
   ttl.textContent=`Vivienda ${h.num||'?'}`;
   ctxMenu.appendChild(ttl);
   const locked = isLockedForTerreno(h);
-  [['R0','🔵 Marcar R0'],['R1','🟢 Marcar R1'],['RFF','📝 Marcar RF Fichaje'],['RF','✅ Marcar RF Recibida']].forEach(([st,label])=>{
+  [['R0','🔵 Marcar R0'],['R1','🟢 Marcar R1'],['RFF','📝 Marcar RF Interior Fichaje'],['RF','✅ Marcar RF Interior Recibida']].forEach(([st,label])=>{
     const b=document.createElement('button');
     const targetRank = STATE_RANK[st];
     const curRank = STATE_RANK[h.state||'ND'];
@@ -1569,11 +1570,11 @@ window.mostrarCierreDia = async () => {
           <div style="font-size:24px;font-weight:700;color:#27500A">+${delta.R1}</div>
         </div>
         <div style="background:#F1E6F8;border-radius:8px;padding:10px">
-          <div style="font-size:11px;color:#6C2A8C;font-weight:600">RF Fichaje</div>
+          <div style="font-size:11px;color:#6C2A8C;font-weight:600">RF Interior Fichaje</div>
           <div style="font-size:24px;font-weight:700;color:#6C2A8C">+${delta.RFF}</div>
         </div>
         <div style="background:#1a1a2e;border-radius:8px;padding:10px">
-          <div style="font-size:11px;color:#fff;font-weight:600">RF Recibida</div>
+          <div style="font-size:11px;color:#fff;font-weight:600">RF Interior Recibida</div>
           <div style="font-size:24px;font-weight:700;color:#fff">+${delta.RF}</div>
         </div>
         <div style="background:#FFF9C4;border-radius:8px;padding:10px">
