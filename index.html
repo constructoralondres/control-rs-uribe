@@ -970,25 +970,59 @@ canvas.addEventListener('click', e => {
   if (h) showReadonlyInfo(e.clientX, e.clientY, h);
 });
 
+// Cada rango (R0/R1/RFF/RF) guarda la fecha en que se alcanzó por primera vez.
+// Así se puede bloquear SOLO los rangos marcados en días ya cerrados, dejando
+// libre para deshacer lo que se marcó hoy — aunque después se haya avanzado más.
+const RANK_KEYS = ['R0','R1','RFF','RF']; // índice = rango-1
+
+function rankDatesOf(h) {
+  if (h.rankDates) return h.rankDates;
+  // Vivienda sin historial granular (dato anterior a esta versión): reconstruir
+  // usando la única fecha que existía, como fecha protegida de todo lo previo.
+  const rd = {};
+  const curRank = STATE_RANK[h.state || 'ND'];
+  const fallbackDate = h.stateDate || '2000-01-01';
+  RANK_KEYS.forEach((key, i) => { if (i < curRank) rd[key] = fallbackDate; });
+  return rd;
+}
+
+// ¿Se puede bajar del rango actual hasta targetRank sin tocar progreso de días ya cerrados?
+function canLowerRank(h, targetRank) {
+  if (!isTerreno) return true; // admin siempre puede
+  if (!lastCierreDate) return true; // sin cierres → nada protegido
+  const today = getTodayISO();
+  const curRank = STATE_RANK[h.state || 'ND'];
+  const rd = rankDatesOf(h);
+  for (let r = targetRank; r < curRank; r++) {
+    const d = rd[RANK_KEYS[r]];
+    if (!d || (d < today && d <= lastCierreDate)) return false; // ese rango es de un día ya cerrado
+  }
+  return true;
+}
+
 function isLockedForTerreno(h) {
   if (!isTerreno) return false;
   if (!h.state || h.state === 'ND') return false;
-  if (!lastCierreDate) return false; // sin cierres → nada bloqueado
-  const today = getTodayISO();
-  if (h.stateDate && h.stateDate >= today) return false; // hoy nunca bloqueado
-  if (h.stateDate) return h.stateDate <= lastCierreDate;
-  return true; // estado sin fecha (marcado antes de esta versión) → bloqueado
+  return !canLowerRank(h, 0);
 }
 
-// Al avanzar de estado hay que conservar la fecha "protegida" (de días ya cerrados)
-// en vez de pisarla con la de hoy — si no, un avance desbloquea sin querer el
-// progreso anterior para el botón "Limpiar estado".
-function nextStateDate(h) {
+function computeRankDatesForAdvance(h, targetState) {
   const today = getTodayISO();
-  if (h.stateDate && h.stateDate < today && lastCierreDate && h.stateDate <= lastCierreDate) {
-    return h.stateDate; // preservar fecha protegida del avance anterior
+  const curRank = STATE_RANK[h.state || 'ND'];
+  const targetRank = STATE_RANK[targetState];
+  const rd = { ...rankDatesOf(h) };
+  for (let r = curRank; r < targetRank; r++) {
+    const key = RANK_KEYS[r];
+    if (!rd[key]) rd[key] = today;
   }
-  return today;
+  return rd;
+}
+
+function computeRankDatesForLower(h, targetRank) {
+  const rd = { ...rankDatesOf(h) };
+  const curRank = STATE_RANK[h.state || 'ND'];
+  for (let r = targetRank; r < curRank; r++) delete rd[RANK_KEYS[r]];
+  return rd;
 }
 
 // ── Ctx menu ──────────────────────────────────────────
@@ -1000,15 +1034,20 @@ function showCtxMenu(mx,my,h){
   const locked = isLockedForTerreno(h);
   [['R0','🔵 Marcar R0'],['R1','🟢 Marcar R1'],['RFF','📝 Marcar RF Fichaje'],['RF','✅ Marcar RF Recibida']].forEach(([st,label])=>{
     const b=document.createElement('button');
-    const isDowngrade = STATE_RANK[st] <= STATE_RANK[h.state||'ND'];
-    const isDisabled = locked && isDowngrade;
+    const targetRank = STATE_RANK[st];
+    const curRank = STATE_RANK[h.state||'ND'];
+    const isDisabled = targetRank < curRank && !canLowerRank(h, targetRank);
     b.innerHTML=(h.state===st?'<strong>':'')+label+(h.state===st?'</strong>':'');
     if(isDisabled){
       b.disabled=true;
       b.style.opacity='0.3';
       b.style.cursor='not-allowed';
     } else {
-      b.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:st,stateDate:nextStateDate(h)}); ctxMenu.style.display='none'; };
+      b.onclick=()=>{
+        const rd = targetRank >= curRank ? computeRankDatesForAdvance(h, st) : computeRankDatesForLower(h, targetRank);
+        update(ref(db,'uribe/v2/'+h.id),{state:st, stateDate:getTodayISO(), rankDates:rd});
+        ctxMenu.style.display='none';
+      };
     }
     ctxMenu.appendChild(b);
   });
@@ -1023,7 +1062,7 @@ function showCtxMenu(mx,my,h){
   } else {
     bclear.textContent='↩ Limpiar estado';
     bclear.style.color='#888';
-    bclear.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:'ND',stateDate:null}); ctxMenu.style.display='none'; };
+    bclear.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:'ND',stateDate:null,rankDates:null}); ctxMenu.style.display='none'; };
   }
   ctxMenu.appendChild(bclear);
   if(isAdmin){
