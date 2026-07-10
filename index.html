@@ -201,7 +201,6 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
         <svg width="28" height="20" style="flex-shrink:0">
           <rect x="2" y="2" width="24" height="16" fill="rgba(108,42,140,0.15)" stroke="#6C2A8C" stroke-width="2.5"></rect>
           <circle cx="14" cy="10" r="5" fill="none" stroke="#6C2A8C" stroke-width="1.5"></circle>
-          <polyline points="10.5,10 13,13 17.5,7" fill="none" stroke="#6C2A8C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
         </svg>
         RF Fichaje
       </button>
@@ -651,7 +650,7 @@ function draw() {
       ctx.restore();
     }
 
-    // ── RFF: capa violeta + tick circular hueco (fichaje) ─ si rank >= 3 y filtro RFF activo ──
+    // ── RFF: capa violeta + circulo hueco, sin tick (fichaje) ─ si rank >= 3 y filtro RFF activo ──
     if (rank >= 3 && filters.has('RFF')) {
       tracePath();
       ctx.fillStyle = 'rgba(108,42,140,0.16)';
@@ -666,13 +665,6 @@ function draw() {
       ctx.arc(cxf, cyf, rf2, 0, Math.PI*2);
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.fill();
-      ctx.strokeStyle = COL_RFF;
-      ctx.lineWidth = Math.max(1.8, 2.5*scale);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cxf - rf2*0.45, cyf + rf2*0.05);
-      ctx.lineTo(cxf - rf2*0.05, cyf + rf2*0.42);
-      ctx.lineTo(cxf + rf2*0.52, cyf - rf2*0.38);
       ctx.strokeStyle = COL_RFF;
       ctx.lineWidth = Math.max(1.8, 2.5*scale);
       ctx.stroke();
@@ -1743,24 +1735,17 @@ window.verHistorial = async () => {
     { key:'RF',  label:'RF int. (recibida)',  bg:'#1a1a2e', color:'#ffffff', cellColor:'#1a1a2e' },
     { key:'RFE', label:'RF ext. (recibido)',  bg:'#FFF9C4', color:'#7a6000', cellColor:'#7a6000' },
   ];
-  // Promedio semanal de cada estado (a mostrar a la derecha de cada cuadro semanal)
-  const _weeksWithData = weeks.filter(mondayISO => {
-    const wd = Array.from({length:5}, (_,i) => addDays(mondayISO, i));
-    return wd.some(d => byDate[d]);
-  });
-  const weeklyAvg = {};
-  ROWS.forEach(row => {
-    let total = 0;
-    _weeksWithData.forEach(mondayISO => {
-      const wd = Array.from({length:5}, (_,i) => addDays(mondayISO, i));
-      wd.forEach(iso => { if (byDate[iso]) total += (byDate[iso].delta?.[row.key] ?? 0); });
-    });
-    weeklyAvg[row.key] = _weeksWithData.length > 0 ? total / _weeksWithData.length : 0;
-  });
   let html = '';
   weeks.forEach(mondayISO => {
     const weekDates = Array.from({length:5}, (_,i) => addDays(mondayISO, i));
     if (!weekDates.some(d => byDate[d]) && mondayISO !== currentWeekMonday) return;
+    // Promedio semanal de cada estado: suma de los días CERRADOS de esta semana / cantidad de días cerrados de esta semana
+    const closedDates = weekDates.filter(d => byDate[d]);
+    const weekAvg = {};
+    ROWS.forEach(row => {
+      const total = closedDates.reduce((s,d) => s + (byDate[d].delta?.[row.key] ?? 0), 0);
+      weekAvg[row.key] = closedDates.length > 0 ? total / closedDates.length : 0;
+    });
     html += `<table style="width:100%;border-collapse:collapse;margin-bottom:18px;font-size:11px">
       <thead><tr style="background:#f5f3ef">
         <th style="padding:5px 7px;text-align:left;color:#888;font-weight:600;border:1px solid #eee;width:68px"> </th>`;
@@ -1795,7 +1780,7 @@ window.verHistorial = async () => {
           html += `<td style="padding:6px 4px;text-align:center;border:1px solid #eee;font-weight:${val>0?'700':'400'};color:${val>0?row.cellColor:'#888'};background:${ri%2===1?'#fafafa':'#fff'}">${disp}</td>`;
         }
       });
-      const avgVal = weeklyAvg[row.key] ?? 0;
+      const avgVal = weekAvg[row.key] ?? 0;
       html += `<td style="padding:6px 4px;text-align:center;border:1px solid #eee;font-weight:700;color:${row.cellColor};background:#f0ede6">${avgVal.toFixed(1)}</td>`;
       html += '</tr>';
     });
