@@ -24,6 +24,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
 .b-r0{background:#E6F1FB;color:#0C447C}
 .b-r1{background:#EAF3DE;color:#27500A}
+.b-rff{background:#F1E6F8;color:#6C2A8C}
 .b-rf{background:#f0f0f0;color:#222}
 .b-nd{background:#F1EFE8;color:#5F5E5A}.b-rfe{background:#FFF9C4;color:#7a6000}
 .mbtn{width:100%;padding:7px 10px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:12px;cursor:pointer;text-align:left;color:#333}
@@ -167,7 +168,8 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
       <div class="stat-row"><span style="color:#666;font-size:12px">Total viviendas</span><strong id="s-total">283</strong></div>
       <div class="stat-row"><span class="badge b-r0">R0 Interior</span><strong id="s-r0">0</strong></div>
       <div class="stat-row"><span class="badge b-r1">R1 Interior</span><strong id="s-r1">0</strong></div>
-      <div class="stat-row"><span class="badge b-rf">RF Interior ✓</span><strong id="s-rf">0</strong></div>
+      <div class="stat-row"><span class="badge b-rff">RF Fichaje</span><strong id="s-rff">0</strong></div>
+      <div class="stat-row"><span class="badge b-rf">RF Recibida ✓</span><strong id="s-rf">0</strong></div>
       <div class="stat-row"><span class="badge b-rfe">RF Exterior ✓</span><strong id="s-rfe">0</strong></div>
       <div class="stat-row"><span class="badge b-nd">S/D</span><strong id="s-nd">283</strong></div>
     </div>
@@ -195,13 +197,21 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
         </svg>
         R1 Interior
       </button>
+      <button class="fbtn active" id="fb-rff" onclick="toggleFilter(&#39;RFF&#39;,this)">
+        <svg width="28" height="20" style="flex-shrink:0">
+          <rect x="2" y="2" width="24" height="16" fill="rgba(108,42,140,0.15)" stroke="#6C2A8C" stroke-width="2.5"></rect>
+          <circle cx="14" cy="10" r="5" fill="none" stroke="#6C2A8C" stroke-width="1.5"></circle>
+          <polyline points="10.5,10 13,13 17.5,7" fill="none" stroke="#6C2A8C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+        </svg>
+        RF Fichaje
+      </button>
       <button class="fbtn active" id="fb-rf" onclick="toggleFilter(&#39;RF&#39;,this)">
         <svg width="28" height="20" style="flex-shrink:0">
           <rect x="2" y="2" width="24" height="16" fill="rgba(0,0,0,0.28)" stroke="#0C447C" stroke-width="2"></rect>
           <circle cx="14" cy="10" r="5" fill="white" stroke="#111" stroke-width="1.5"></circle>
           <polyline points="10.5,10 13,13 17.5,7" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
         </svg>
-        RF Interior
+        RF Recibida
       </button>
       <button class="fbtn active" id="fb-nd" onclick="toggleFilter(&#39;ND&#39;,this)">
         <svg width="28" height="20" style="flex-shrink:0">
@@ -347,6 +357,9 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
     <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#EAF3DE">
       <span style="color:#27500A;font-weight:600">R1 Int.</span><strong id="ms-r1" style="color:#27500A">0</strong>
     </div>
+    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#F1E6F8">
+      <span style="color:#6C2A8C;font-weight:600">RFF Int.</span><strong id="ms-rff" style="color:#6C2A8C">0</strong>
+    </div>
     <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#1a1a2e;border-radius:0 6px 6px 0">
       <span style="color:#fff;font-weight:600">RF Int.</span><strong id="ms-rf" style="color:#fff">0</strong>
     </div>
@@ -362,6 +375,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
   <div id="mobile-actions" style="flex-wrap:wrap;gap:6px;padding:6px 12px 10px">
     <button id="mfb-r0" class="mob-btn" onclick="toggleMobileFilter(&#39;R0&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#E6F1FB;color:#0C447C;font-size:12px;border-radius:8px;border:2px solid #0C447C;flex-direction:column">R0 Int.<span style="font-size:9px">ver</span></button>
     <button id="mfb-r1" class="mob-btn" onclick="toggleMobileFilter(&#39;R1&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#EAF3DE;color:#27500A;font-size:12px;border-radius:8px;border:2px solid #27500A;flex-direction:column">R1 Int.<span style="font-size:9px">ver</span></button>
+    <button id="mfb-rff" class="mob-btn" onclick="toggleMobileFilter(&#39;RFF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#F1E6F8;color:#6C2A8C;font-size:12px;border-radius:8px;border:2px solid #6C2A8C;flex-direction:column">RFF Int.<span style="font-size:9px">ver</span></button>
     <button id="mfb-rf" class="mob-btn" onclick="toggleMobileFilter(&#39;RF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#1a1a2e;color:#fff;font-size:12px;border-radius:8px;border:2px solid #1a1a2e;flex-direction:column">RF Int.<span style="font-size:9px">ver</span></button>
     <button id="mfb-nd" class="mob-btn" onclick="toggleMobileFilter(&#39;ND&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#f5f3ef;color:#666;font-size:12px;border-radius:8px;border:2px solid #ccc;flex-direction:column">S/D<span style="font-size:9px">ver</span></button>
 
@@ -461,10 +475,11 @@ const STROKE_R1 = 3;  // ya no se usa como contorno
 const COL_R0 = '#0C447C';
 const COL_R1 = '#27500A';
 const COL_RFE = '#F5C400'; // amarillo RF exterior
+const COL_RFF = '#6C2A8C'; // morado RF fichaje
 
 let houses = {}, mode = 'view', isAdmin = false, isTerreno = false;
 let lastCierreDate = ''; // fecha del último cierre (YYYY-MM-DD)
-let filters = new Set(['R0','R1','RF','ND','RFE']);
+let filters = new Set(['R0','R1','RFF','RF','ND','RFE']);
 let scale = 1, offX = 0, offY = 0;
 let panning = false, panSt = {x:0,y:0};
 let dragging = null, dragOff = {x:0,y:0};
@@ -548,7 +563,7 @@ function toM(x,y){ return {x:(x-offX)/scale, y:(y-offY)/scale}; }
 
 // ── Lógica de estados acumulativos ────────────────────
 // R0 < R1 < RF  →  si una casa es RF, también tiene R0 y R1
-const STATE_RANK = {ND:0, R0:1, R1:2, RF:3};
+const STATE_RANK = {ND:0, R0:1, R1:2, RFF:3, RF:4};
 
 function shouldShow(houseState, filterState) {
   // Mostrar la vivienda en el filtro si su rango >= rango del filtro
@@ -636,8 +651,35 @@ function draw() {
       ctx.restore();
     }
 
-    // ── RF: capa oscura + tick circular negro — si rank >= 3 y filtro RF activo ──
-    if (rank >= 3 && filters.has('RF')) {
+    // ── RFF: capa violeta + tick circular hueco (fichaje) ─ si rank >= 3 y filtro RFF activo ──
+    if (rank >= 3 && filters.has('RFF')) {
+      tracePath();
+      ctx.fillStyle = 'rgba(108,42,140,0.16)';
+      ctx.fill();
+      const cxf = pts.reduce((a,p)=>a+p.x,0)/pts.length;
+      const cyf = pts.reduce((a,p)=>a+p.y,0)/pts.length;
+      const rf2 = Math.max(7, 9*scale);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.arc(cxf, cyf, rf2, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fill();
+      ctx.strokeStyle = COL_RFF;
+      ctx.lineWidth = Math.max(1.8, 2.5*scale);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cxf - rf2*0.45, cyf + rf2*0.05);
+      ctx.lineTo(cxf - rf2*0.05, cyf + rf2*0.42);
+      ctx.lineTo(cxf + rf2*0.52, cyf - rf2*0.38);
+      ctx.strokeStyle = COL_RFF;
+      ctx.lineWidth = Math.max(1.8, 2.5*scale);
+      ctx.stroke();
+    }
+
+    // ── RF: capa oscura + tick circular negro (recibida) ─ si rank >= 4 y filtro RF activo ──
+    if (rank >= 4 && filters.has('RF')) {
       // Capa oscura sobre toda la vivienda
       tracePath();
       ctx.fillStyle = 'rgba(0,0,0,0.28)';
@@ -863,7 +905,7 @@ canvas.addEventListener('mousemove', e=>{
   if(h){
     canvas.style.cursor=mode==='move'&&isAdmin?'grab':'pointer';
     const st=h.state||'ND';
-    const stLabel={R0:'R0 Interior — Revisión 0',R1:'R1 Interior — Revisión 1',RF:'RF Interior — Revisión Final',ND:'Sin estado'}[st];
+    const stLabel={R0:'R0 Interior — Revisión 0',R1:'R1 Interior — Revisión 1',RFF:'RF Interior — Fichaje',RF:'RF Interior — Recibida',ND:'Sin estado'}[st];
     const tipoObj = h.tipo ? TIPOLOGIAS.find(t=>t.id===h.tipo) : null;
     const tipoHtml = tipoObj
       ? `<br><span style="font-size:10px;display:flex;align-items:center;gap:4px;margin-top:3px"><span style="width:8px;height:8px;background:${tipoObj.color};border-radius:2px;display:inline-block;flex-shrink:0"></span><span style="color:#666">${tipoObj.label}</span></span>`
@@ -903,9 +945,9 @@ function showReadonlyInfo(mx, my, h) {
   const existing = document.getElementById('readonly-popup');
   if (existing) existing.remove();
   const st = h.state || 'ND';
-  const stLabel = {R0:'R0 Interior — Revisión 0', R1:'R1 Interior — Revisión 1', RF:'RF Interior — Revisión Final', ND:'Sin estado'}[st];
-  const stColor = {R0:'#0C447C', R1:'#27500A', RF:'#222', ND:'#888'}[st];
-  const stBg   = {R0:'#E6F1FB',  R1:'#EAF3DE',  RF:'#f0f0f0', ND:'#F1EFE8'}[st];
+  const stLabel = {R0:'R0 Interior — Revisión 0', R1:'R1 Interior — Revisión 1', RFF:'RF Interior — Fichaje', RF:'RF Interior — Recibida', ND:'Sin estado'}[st];
+  const stColor = {R0:'#0C447C', R1:'#27500A', RFF:'#6C2A8C', RF:'#222', ND:'#888'}[st];
+  const stBg   = {R0:'#E6F1FB',  R1:'#EAF3DE',  RFF:'#F1E6F8', RF:'#f0f0f0', ND:'#F1EFE8'}[st];
   const tipoObj = h.tipo ? TIPOLOGIAS.find(t => t.id === h.tipo) : null;
   const tipoHtml = tipoObj
     ? `<div style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:12px;color:#555"><span style="width:10px;height:10px;background:${tipoObj.color};border-radius:2px;display:inline-block;flex-shrink:0"></span>${tipoObj.label}</div>`
@@ -953,7 +995,7 @@ function showCtxMenu(mx,my,h){
   ttl.textContent=`Vivienda ${h.num||'?'}`;
   ctxMenu.appendChild(ttl);
   const locked = isLockedForTerreno(h);
-  [['R0','🔵 Marcar R0'],['R1','🟢 Marcar R1'],['RF','✅ Marcar RF']].forEach(([st,label])=>{
+  [['R0','🔵 Marcar R0'],['R1','🟢 Marcar R1'],['RFF','📝 Marcar RF Fichaje'],['RF','✅ Marcar RF Recibida']].forEach(([st,label])=>{
     const b=document.createElement('button');
     const isDowngrade = STATE_RANK[st] <= STATE_RANK[h.state||'ND'];
     const isDisabled = locked && isDowngrade;
@@ -1136,17 +1178,19 @@ window.toggleFilter=(f,btn)=>{
   draw();
 };
 function updateStats(){
-  const c={R0:0,R1:0,RF:0,ND:0};
+  const c={R0:0,R1:0,RFF:0,RF:0,ND:0};
   Object.values(houses).forEach(h=>{
     const rank=STATE_RANK[h.state||'ND'];
     if(rank>=1) c.R0++;
     if(rank>=2) c.R1++;
-    if(rank>=3) c.RF++;
+    if(rank>=3) c.RFF++;
+    if(rank>=4) c.RF++;
     if(rank===0) c.ND++;
   });
   document.getElementById('s-total').textContent=Object.keys(houses).length;
   document.getElementById('s-r0').textContent=c.R0||0;
   document.getElementById('s-r1').textContent=c.R1||0;
+  document.getElementById('s-rff').textContent=c.RFF||0;
   document.getElementById('s-rf').textContent=c.RF||0;
   document.getElementById('s-rfe').textContent=Object.values(patios).filter(p=>p.rfExt).length;
   document.getElementById('s-nd').textContent=c.ND||0;
@@ -1217,17 +1261,19 @@ const isMobile = () => window.innerWidth <= 768;
 
 function mobileUpdateStats() {
   if (!isMobile()) return;
-  const c={R0:0,R1:0,RF:0,ND:0};
+  const c={R0:0,R1:0,RFF:0,RF:0,ND:0};
   Object.values(houses).forEach(h=>{
     const rank=STATE_RANK[h.state||'ND'];
     if(rank>=1) c.R0++;
     if(rank>=2) c.R1++;
-    if(rank>=3) c.RF++;
+    if(rank>=3) c.RFF++;
+    if(rank>=4) c.RF++;
     if(rank===0) c.ND++;
   });
   document.getElementById('ms-total').textContent=Object.keys(houses).length;
   document.getElementById('ms-r0').textContent=c.R0||0;
   document.getElementById('ms-r1').textContent=c.R1||0;
+  document.getElementById('ms-rff').textContent=c.RFF||0;
   document.getElementById('ms-rf').textContent=c.RF||0;
   document.getElementById('ms-rfe').textContent=Object.values(patios).filter(p=>p.rfExt).length;
   document.getElementById('ms-nd').textContent=c.ND||0;
@@ -1413,12 +1459,13 @@ onValue(cierreRef, snap => {
 });
 
 function getCounts() {
-  const c = {R0:0, R1:0, RF:0, ND:0, RFE:0, total:0};
+  const c = {R0:0, R1:0, RFF:0, RF:0, ND:0, RFE:0, total:0};
   Object.values(houses).forEach(h => {
     const rank = STATE_RANK[h.state||'ND'];
     if(rank>=1) c.R0++;
     if(rank>=2) c.R1++;
-    if(rank>=3) c.RF++;
+    if(rank>=3) c.RFF++;
+    if(rank>=4) c.RF++;
     if(rank===0) c.ND++;
     c.total++;
   });
@@ -1448,12 +1495,13 @@ window.mostrarCierreDia = async () => {
   } else {
     keyAnterior = keys.length > 0 ? keys[keys.length-1] : null;
   }
-  const anterior = keyAnterior ? cierres[keyAnterior].acumulado : {R0:0, R1:0, RF:0, RFE:0};
+  const anterior = keyAnterior ? cierres[keyAnterior].acumulado : {R0:0, R1:0, RFF:0, RF:0, RFE:0};
 
   const actual = getCounts();
   const delta = {
     R0: actual.R0 - (anterior.R0||0),
     R1: actual.R1 - (anterior.R1||0),
+    RFF: actual.RFF - (anterior.RFF||0),
     RF: actual.RF - (anterior.RF||0),
     RFE: actual.RFE - (anterior.RFE||0),
   };
@@ -1469,7 +1517,7 @@ window.mostrarCierreDia = async () => {
     ${warningHtml}
     <div style="background:#f5f3ef;border-radius:10px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:10px;text-transform:uppercase">Avance del día</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;text-align:center">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;text-align:center">
         <div style="background:#E6F1FB;border-radius:8px;padding:10px">
           <div style="font-size:11px;color:#0C447C;font-weight:600">R0 Interior</div>
           <div style="font-size:24px;font-weight:700;color:#0C447C">+${delta.R0}</div>
@@ -1478,8 +1526,12 @@ window.mostrarCierreDia = async () => {
           <div style="font-size:11px;color:#27500A;font-weight:600">R1 Interior</div>
           <div style="font-size:24px;font-weight:700;color:#27500A">+${delta.R1}</div>
         </div>
+        <div style="background:#F1E6F8;border-radius:8px;padding:10px">
+          <div style="font-size:11px;color:#6C2A8C;font-weight:600">RF Fichaje</div>
+          <div style="font-size:24px;font-weight:700;color:#6C2A8C">+${delta.RFF}</div>
+        </div>
         <div style="background:#1a1a2e;border-radius:8px;padding:10px">
-          <div style="font-size:11px;color:#fff;font-weight:600">RF Interior</div>
+          <div style="font-size:11px;color:#fff;font-weight:600">RF Recibida</div>
           <div style="font-size:24px;font-weight:700;color:#fff">+${delta.RF}</div>
         </div>
         <div style="background:#FFF9C4;border-radius:8px;padding:10px">
@@ -1489,7 +1541,7 @@ window.mostrarCierreDia = async () => {
       </div>
     </div>
     <div style="font-size:11px;color:#aaa;text-align:center">
-      Acumulado total: R0=${actual.R0} · R1=${actual.R1} · RF=${actual.RF} · RFE=${actual.RFE}
+      Acumulado total: R0=${actual.R0} · R1=${actual.R1} · RFF=${actual.RFF} · RF=${actual.RF} · RFE=${actual.RFE}
     </div>
   `;
 
@@ -1497,7 +1549,7 @@ window.mostrarCierreDia = async () => {
   document.getElementById('btn-confirmar-cierre').textContent = cierreHoy ? 'Reemplazar cierre de hoy' : 'Confirmar cierre';
 
   window._pendingCierre = {
-    delta, acumulado: {R0:actual.R0,R1:actual.R1,RF:actual.RF,RFE:actual.RFE},
+    delta, acumulado: {R0:actual.R0,R1:actual.R1,RFF:actual.RFF,RF:actual.RF,RFE:actual.RFE},
     fecha: fechaStr, ts: now.toISOString(),
     reemplazarKey: cierreHoyKey || null
   };
@@ -1567,16 +1619,17 @@ window.verDetalle = () => {
   const div = document.getElementById('detalle-contenido');
   // Contar por tipología y estado
   const counts = {};
-  TIPOLOGIAS.forEach(t => { counts[t.id] = {R0:0,R1:0,RF:0}; });
-  counts['??'] = {R0:0,R1:0,RF:0}; // sin tipología asignada
+  TIPOLOGIAS.forEach(t => { counts[t.id] = {R0:0,R1:0,RFF:0,RF:0}; });
+  counts['??'] = {R0:0,R1:0,RFF:0,RF:0}; // sin tipología asignada
 
   Object.values(houses).forEach(h => {
     const tid = h.tipo || '??';
-    if(!counts[tid]) counts[tid]={R0:0,R1:0,RF:0};
+    if(!counts[tid]) counts[tid]={R0:0,R1:0,RFF:0,RF:0};
     const rank = STATE_RANK[h.state||'ND'];
     if(rank>=1) counts[tid].R0++;
     if(rank>=2) counts[tid].R1++;
-    if(rank>=3) counts[tid].RF++;
+    if(rank>=3) counts[tid].RFF++;
+    if(rank>=4) counts[tid].RF++;
   });
 
   // Totales por tipología: contar viviendas que tienen tipo asignado
@@ -1588,7 +1641,7 @@ window.verDetalle = () => {
 
   const mkTable = (stKey, stLabel, col) => {
     const rows = TIPOLOGIAS.map(t => {
-      const c = counts[t.id] || {R0:0,R1:0,RF:0};
+      const c = counts[t.id] || {R0:0,R1:0,RFF:0,RF:0};
       const total = totalesPorTipo[t.id] || 0;
       const llevamos = c[stKey];
       const faltan = Math.max(0, total - llevamos);
@@ -1631,7 +1684,8 @@ window.verDetalle = () => {
   div.innerHTML =
     mkTable('R0','R0 Interior — Revisión 0','#0C447C') +
     mkTable('R1','R1 Interior — Revisión 1','#27500A') +
-    mkTable('RF','RF Interior — Revisión Final','#1a1a2e');
+    mkTable('RFF','RF Interior — Fichaje','#6C2A8C') +
+    mkTable('RF','RF Interior — Recibida','#1a1a2e');
 
   document.getElementById('detalle-modal').style.display='flex';
 };
@@ -1684,10 +1738,25 @@ window.verHistorial = async () => {
   }
   const ROWS = [
     { key:'R0',  label:'R0 int.',  bg:'#E6F1FB', color:'#0C447C', cellColor:'#0C447C' },
-    { key:'R1',  label:'R1 int.',  bg:'#EAF3DE', color:'#27500A', cellColor:'#27500A' },
-    { key:'RF',  label:'RF int.',  bg:'#1a1a2e', color:'#ffffff', cellColor:'#1a1a2e' },
-    { key:'RFE', label:'RF ext.',  bg:'#FFF9C4', color:'#7a6000', cellColor:'#7a6000' },
+    { key:'R1',  label:'R1 int. (recibida)',  bg:'#EAF3DE', color:'#27500A', cellColor:'#27500A' },
+    { key:'RFF', label:'RF int. (fichaje)',  bg:'#F1E6F8', color:'#6C2A8C', cellColor:'#6C2A8C' },
+    { key:'RF',  label:'RF int. (recibida)',  bg:'#1a1a2e', color:'#ffffff', cellColor:'#1a1a2e' },
+    { key:'RFE', label:'RF ext. (recibido)',  bg:'#FFF9C4', color:'#7a6000', cellColor:'#7a6000' },
   ];
+  // Promedio semanal de cada estado (a mostrar a la derecha de cada cuadro semanal)
+  const _weeksWithData = weeks.filter(mondayISO => {
+    const wd = Array.from({length:5}, (_,i) => addDays(mondayISO, i));
+    return wd.some(d => byDate[d]);
+  });
+  const weeklyAvg = {};
+  ROWS.forEach(row => {
+    let total = 0;
+    _weeksWithData.forEach(mondayISO => {
+      const wd = Array.from({length:5}, (_,i) => addDays(mondayISO, i));
+      wd.forEach(iso => { if (byDate[iso]) total += (byDate[iso].delta?.[row.key] ?? 0); });
+    });
+    weeklyAvg[row.key] = _weeksWithData.length > 0 ? total / _weeksWithData.length : 0;
+  });
   let html = '';
   weeks.forEach(mondayISO => {
     const weekDates = Array.from({length:5}, (_,i) => addDays(mondayISO, i));
@@ -1704,6 +1773,10 @@ window.verHistorial = async () => {
         ${isHol ? '<div style="font-size:8px;font-weight:700;color:#b8860b">FERIADO</div>' : ''}
       </th>`;
     });
+    html += `<th style="padding:4px 3px;text-align:center;color:#555;font-weight:700;border:1px solid #eee;min-width:56px;background:#f0ede6">
+        <div style="font-size:10px">Prom.</div>
+        <div style="font-weight:400;font-size:8px;color:#aaa;white-space:nowrap">semanal</div>
+      </th>`;
     html += '</tr></thead><tbody>';
     ROWS.forEach((row, ri) => {
       html += `<tr>
@@ -1722,6 +1795,8 @@ window.verHistorial = async () => {
           html += `<td style="padding:6px 4px;text-align:center;border:1px solid #eee;font-weight:${val>0?'700':'400'};color:${val>0?row.cellColor:'#888'};background:${ri%2===1?'#fafafa':'#fff'}">${disp}</td>`;
         }
       });
+      const avgVal = weeklyAvg[row.key] ?? 0;
+      html += `<td style="padding:6px 4px;text-align:center;border:1px solid #eee;font-weight:700;color:${row.cellColor};background:#f0ede6">${avgVal.toFixed(1)}</td>`;
       html += '</tr>';
     });
     html += `<tr style="background:#f5f3ef;border-top:2px solid #eee">
@@ -1732,10 +1807,11 @@ window.verHistorial = async () => {
         html += `<td style="padding:4px;border:1px solid #eee"></td>`;
       } else {
         html += `<td style="padding:4px 3px;text-align:center;font-size:9px;color:#aaa;border:1px solid #eee;line-height:1.3">
-          <span>${c.acumulado?.R0??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.R1??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RF??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RFE??'—'}</span>
+          <span>${c.acumulado?.R0??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.R1??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RFF??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RF??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RFE??'—'}</span>
         </td>`;
       }
     });
+    html += `<td style="padding:4px;border:1px solid #eee;background:#f5f3ef"></td>`;
     html += '</tr></tbody></table>';
   });
   div.innerHTML = html || '<p style="color:#aaa;text-align:center;font-size:13px">No hay cierres registrados aún</p>';
@@ -1846,11 +1922,11 @@ function capturarPantalla() {
       function _parseFechaAuto(f) { const [d,m,y]=f.split('/'); return new Date(+y,+m-1,+d); }
       const labKeys = keys.filter(k => { const dw=_parseFechaAuto(cierres[k].fecha).getDay(); return dw!==0&&dw!==6; });
       const lastKey = labKeys.length > 0 ? labKeys[labKeys.length-1] : null;
-      const anterior = lastKey ? cierres[lastKey].acumulado : {R0:0,R1:0,RF:0,RFE:0};
+      const anterior = lastKey ? cierres[lastKey].acumulado : {R0:0,R1:0,RFF:0,RF:0,RFE:0};
       const actual = getCounts();
-      const delta = { R0: actual.R0-(anterior.R0||0), R1: actual.R1-(anterior.R1||0), RF: actual.RF-(anterior.RF||0), RFE: actual.RFE-(anterior.RFE||0) };
+      const delta = { R0: actual.R0-(anterior.R0||0), R1: actual.R1-(anterior.R1||0), RFF: actual.RFF-(anterior.RFF||0), RF: actual.RF-(anterior.RF||0), RFE: actual.RFE-(anterior.RFE||0) };
       await fbPush(cierreRef, {
-        delta, acumulado: {R0:actual.R0,R1:actual.R1,RF:actual.RF,RFE:actual.RFE},
+        delta, acumulado: {R0:actual.R0,R1:actual.R1,RFF:actual.RFF,RF:actual.RF,RFE:actual.RFE},
         fecha: fechaStr, ts: now.toISOString(), auto: true
       });
       showToast('🔒 Cierre automático del día guardado');
