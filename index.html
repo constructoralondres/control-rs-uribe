@@ -1271,18 +1271,21 @@ function showPatioCtxMenu(mx,my,p){
     bmrk.onclick=()=>{ update(ref(db,'uribe/patios/'+p.id),{rfExt:true,rfExtDate:getTodayISO()}); ctxMenu.style.display='none'; };
   }
   ctxMenu.appendChild(bmrk);
-  const sepc=document.createElement('div'); sepc.className='sep'; ctxMenu.appendChild(sepc);
-  const bcopy=document.createElement('button');
-  bcopy.innerHTML='📋 Copiar forma';
-  bcopy.style.color='#7a6000'; bcopy.style.fontWeight='bold';
-  bcopy.onclick=()=>{
-    copiedPatio=[...p.pts];
-    const btn=document.getElementById('btn-paste-patio');
-    if(btn) btn.style.display='';
-    setMode('paste-patio');
-    ctxMenu.style.display='none';
-  };
-  ctxMenu.appendChild(bcopy);
+  // Botón copiar forma (solo admin)
+  if(isAdmin){
+    const sepc=document.createElement('div'); sepc.className='sep'; ctxMenu.appendChild(sepc);
+    const bcopy=document.createElement('button');
+    bcopy.innerHTML='📋 Copiar forma';
+    bcopy.style.color='#7a6000'; bcopy.style.fontWeight='bold';
+    bcopy.onclick=()=>{
+      copiedPatio=[...p.pts];
+      const btn=document.getElementById('btn-paste-patio');
+      if(btn) btn.style.display='';
+      setMode('paste-patio');
+      ctxMenu.style.display='none';
+    };
+    ctxMenu.appendChild(bcopy);
+  }
   if(isAdmin){
     const sep=document.createElement('div'); sep.className='sep'; ctxMenu.appendChild(sep);
     const dl=document.createElement('button'); dl.style.color='#c0392b';
