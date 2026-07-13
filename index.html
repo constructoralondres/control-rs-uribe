@@ -466,7 +466,7 @@ const db = getDatabase(fbApp);
 const dbRef = ref(db, 'uribe/v2');
 
 const ADMIN_PIN = "applondres1";
-const TERRENO_PIN = "2345pt";
+const TERRENO_PIN = "2345calidad";
 const IMG_W = 7021, IMG_H = 4967;
 
 // Grosor base del contorno (en px de pantalla)
@@ -1137,7 +1137,7 @@ window.modalOk=()=>{
       document.getElementById('btn-salir-terreno').style.display='block';
       document.getElementById('modal').style.display='none';
       setMode('view');
-      showToast('✅ Perfil Jefe de Terreno activado','#27500A');
+      showToast('✅ Perfil Encargado de Calidad activado','#27500A');
     } else { alert('PIN incorrecto'); document.getElementById('modal-input').value=''; }
   } else if(modalAction==='num'){
     if(!val){ alert('Ingresa un número o código'); return; }
@@ -1171,7 +1171,7 @@ window.setMode=m=>{
   const lbl = document.getElementById('hdr-mode');
   if(lbl){
     if(isAdmin) lbl.textContent = m==='draw'?'Admin — Dibujando':m==='move'?'Admin — Moviendo':'Admin';
-    else if(isTerreno) lbl.textContent = 'Profesional de Terreno';
+    else if(isTerreno) lbl.textContent = 'Encargado de Calidad';
     else lbl.textContent = 'Solo lectura';
   }
   // Barra de perfil desktop
@@ -1186,7 +1186,7 @@ window.setMode=m=>{
       bar.style.display='block';
       bar.style.background='#27500A';
       bar.style.color='#fff';
-      bar.innerHTML='👷 &nbsp;Sesión activa: <strong>Profesional de Terreno</strong>';
+      bar.innerHTML='🔍 &nbsp;Sesión activa: <strong>Encargado de Calidad</strong>';
     } else {
       bar.style.display='none';
     }
@@ -1201,7 +1201,7 @@ window.setMode=m=>{
     } else if(isTerreno){
       mbar.style.display='block';
       mbar.style.background='#27500A';
-      mbar.innerHTML='👷 Profesional de Terreno';
+      mbar.innerHTML='🔍 Encargado de Calidad';
     } else {
       mbar.style.display='none';
     }
