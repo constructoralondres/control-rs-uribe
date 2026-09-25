@@ -28,6 +28,8 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
 .b-rff{background:#F1E6F8;color:#6C2A8C}
 .b-rf{background:#f0f0f0;color:#222}
 .b-nd{background:#F1EFE8;color:#5F5E5A}.b-rfe{background:#FFF9C4;color:#7a6000}
+.b-r1ef{background:#FDEBD3;color:#A85A00}
+.b-r1e{background:#FBDAB0;color:#8F4D00}
 .b-rfef{background:#FDF6DA;color:#8a7000}
 .mbtn{width:100%;padding:7px 10px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:12px;cursor:pointer;text-align:left;color:#333}
 .mbtn:hover{background:#f5f3ef}
@@ -173,8 +175,10 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
       <div class="stat-row"><span class="badge b-r1">R1 Interior Recibida</span><strong id="s-r1">0</strong></div>
       <div class="stat-row"><span class="badge b-rff">RF Interior Fichaje</span><strong id="s-rff">0</strong></div>
       <div class="stat-row"><span class="badge b-rf">RF Interior Recibida ✓</span><strong id="s-rf">0</strong></div>
+      <div class="stat-row"><span class="badge b-r1ef">R1 Exterior Fichaje</span><strong id="s-r1ef">0</strong></div>
+      <div class="stat-row"><span class="badge b-r1e">R1 Exterior Recibido</span><strong id="s-r1e">0</strong></div>
       <div class="stat-row"><span class="badge b-rfef">RF Exterior Fichaje</span><strong id="s-rfef">0</strong></div>
-      <div class="stat-row"><span class="badge b-rfe">RF Exterior Recibida ✓</span><strong id="s-rfe">0</strong></div>
+      <div class="stat-row"><span class="badge b-rfe">RF Exterior Recibido ✓</span><strong id="s-rfe">0</strong></div>
       <div class="stat-row"><span class="badge b-nd">S/D</span><strong id="s-nd">283</strong></div>
     </div>
 
@@ -229,6 +233,18 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
         </svg>
         Sin estado
       </button>
+      <button class="fbtn active" id="fb-r1ef" onclick="toggleFilter(&#39;R1EF&#39;,this)">
+        <svg width="28" height="20" style="flex-shrink:0">
+          <rect x="2" y="2" width="24" height="16" fill="none" stroke="#E8820C" stroke-width="2.5" stroke-dasharray="4,3"></rect>
+        </svg>
+        R1 Exterior Fichaje
+      </button>
+      <button class="fbtn active" id="fb-r1e" onclick="toggleFilter(&#39;R1E&#39;,this)">
+        <svg width="28" height="20" style="flex-shrink:0">
+          <rect x="2" y="2" width="24" height="16" fill="rgba(232,130,12,0.18)" stroke="#E8820C" stroke-width="2.5"></rect>
+        </svg>
+        R1 Exterior Recibido
+      </button>
       <button class="fbtn active" id="fb-rfef" onclick="toggleFilter(&#39;RFEF&#39;,this)">
         <svg width="28" height="20" style="flex-shrink:0">
           <rect x="2" y="2" width="24" height="16" fill="none" stroke="#F5C400" stroke-width="2.5" stroke-dasharray="4,3"></rect>
@@ -239,7 +255,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
         <svg width="28" height="20" style="flex-shrink:0">
           <rect x="2" y="2" width="24" height="16" fill="rgba(245,196,0,0.15)" stroke="#F5C400" stroke-width="2.5"></rect>
         </svg>
-        RF Exterior Recibida
+        RF Exterior Recibido
       </button>
     </div>
 
@@ -383,6 +399,12 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
       <span style="color:#fff;font-weight:600">RF Recib.</span><strong id="ms-rf" style="color:#fff">0</strong>
     </div>
     <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#FFF9C4">
+      <span style="color:#A85A00;font-weight:600">R1E Fich.</span><strong id="ms-r1ef" style="color:#A85A00">0</strong>
+    </div>
+    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#FBDAB0">
+      <span style="color:#8F4D00;font-weight:600">R1E Recib.</span><strong id="ms-r1e" style="color:#8F4D00">0</strong>
+    </div>
+    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#FDF6DA">
       <span style="color:#8a7000;font-weight:600">RFE Fich.</span><strong id="ms-rfef" style="color:#8a7000">0</strong>
     </div>
     <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#FFF9C4">
@@ -401,6 +423,8 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
     <button id="mfb-rff" class="mob-btn" onclick="toggleMobileFilter(&#39;RFF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#F1E6F8;color:#6C2A8C;font-size:12px;border-radius:8px;border:2px solid #6C2A8C;flex-direction:column">RF Fich.<span style="font-size:9px">ver</span></button>
     <button id="mfb-rf" class="mob-btn" onclick="toggleMobileFilter(&#39;RF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#1a1a2e;color:#fff;font-size:12px;border-radius:8px;border:2px solid #1a1a2e;flex-direction:column">RF Recib.<span style="font-size:9px">ver</span></button>
     <button id="mfb-nd" class="mob-btn" onclick="toggleMobileFilter(&#39;ND&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#f5f3ef;color:#666;font-size:12px;border-radius:8px;border:2px solid #ccc;flex-direction:column">S/D<span style="font-size:9px">ver</span></button>
+    <button id="mfb-r1ef" class="mob-btn" onclick="toggleMobileFilter(&#39;R1EF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#FDEBD3;color:#A85A00;font-size:12px;border-radius:8px;border:2px dashed #A85A00;flex-direction:column">R1E Fich.<span style="font-size:9px">ver</span></button>
+    <button id="mfb-r1e" class="mob-btn" onclick="toggleMobileFilter(&#39;R1E&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#FBDAB0;color:#8F4D00;font-size:12px;border-radius:8px;border:2px solid #8F4D00;flex-direction:column">R1E Recib.<span style="font-size:9px">ver</span></button>
     <button id="mfb-rfef" class="mob-btn" onclick="toggleMobileFilter(&#39;RFEF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#FDF6DA;color:#8a7000;font-size:12px;border-radius:8px;border:2px dashed #8a7000;flex-direction:column">RFE Fich.<span style="font-size:9px">ver</span></button>
     <button id="mfb-rfe" class="mob-btn" onclick="toggleMobileFilter(&#39;RFE&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#FFF9C4;color:#7a6000;font-size:12px;border-radius:8px;border:2px solid #7a6000;flex-direction:column">RFE Recib.<span style="font-size:9px">ver</span></button>
 
@@ -501,11 +525,12 @@ const COL_R0 = '#0C447C';
 const COL_R1F = '#00695C'; // verde azulado R1 fichaje
 const COL_R1 = '#27500A';
 const COL_RFE = '#F5C400'; // amarillo RF exterior
+const COL_R1E = '#E8820C'; // naranjo R1 exterior
 const COL_RFF = '#6C2A8C'; // morado RF fichaje
 
 let houses = {}, mode = 'view', isAdmin = false, isTerreno = false;
 let lastCierreDate = ''; // fecha del último cierre (YYYY-MM-DD)
-let filters = new Set(['R0','R1F','R1','RFF','RF','ND','RFEF','RFE']);
+let filters = new Set(['R0','R1F','R1','RFF','RF','ND','R1EF','R1E','RFEF','RFE']);
 let scale = 1, offX = 0, offY = 0;
 let panning = false, panSt = {x:0,y:0};
 let dragging = null, dragOff = {x:0,y:0};
@@ -586,6 +611,25 @@ window.doZoom = f => {
 window.resetView = resetView;
 function toC(x,y){ return {x:x*scale+offX, y:y*scale+offY}; }
 function toM(x,y){ return {x:(x-offX)/scale, y:(y-offY)/scale}; }
+
+// ── Estados acumulativos de patios (R Exterior) ───────
+// ND < R1 Ext Fichaje < R1 Ext Recibido < RF Ext Fichaje < RF Ext Recibido
+const PATIO_RANK_KEYS = ['R1EF','R1E','RFEF','RFE']; // índice = rango-1
+function patioRank(p){
+  if (p.rfExt)   return 4;
+  if (p.rfExtF)  return 3;
+  if (p.r1Ext)   return 2;
+  if (p.r1ExtF)  return 1;
+  return 0;
+}
+const PATIO_RANK_OF = {R1EF:1, R1E:2, RFEF:3, RFE:4};
+// Campos que guarda cada rango: [marca, fecha]
+const PATIO_FIELDS = {
+  R1EF: ['r1ExtF','r1ExtFDate'],
+  R1E:  ['r1Ext','r1ExtDate'],
+  RFEF: ['rfExtF','rfExtFDate'],
+  RFE:  ['rfExt','rfExtDate'],
+};
 
 // ── Lógica de estados acumulativos ────────────────────
 // ND < R0 < R1F < R1 < RFF < RF  →  si una casa es RF, también tiene todos los rangos anteriores
@@ -795,8 +839,8 @@ function draw() {
     });
   }
 
-  // ── Patios RF Exterior (Fichaje → Recibida) ─────────────
-  if (filters.has('RFE') || filters.has('RFEF')) {
+  // ── Patios R Exterior (R1 Fichaje → R1 Recibido → RF Fichaje → RF Recibido) ──
+  if (filters.has('R1EF') || filters.has('R1E') || filters.has('RFEF') || filters.has('RFE')) {
     Object.values(patios).forEach(p => {
       if (!p.pts || p.pts.length < 3) return;
       const ppts = p.pts.map(pt => toC(pt.x, pt.y));
@@ -806,11 +850,16 @@ function draw() {
         ppts.forEach((pt,i) => i===0 ? ctx.moveTo(pt.x,pt.y) : ctx.lineTo(pt.x,pt.y));
         ctx.closePath();
       }
-      // Recibida implica fichaje (acumulativo)
-      const esRecibida = !!p.rfExt;
-      const esFichaje  = !!p.rfExtF || esRecibida;
-      if (esRecibida && filters.has('RFE')) {
-        // Recibida: relleno + contorno sólido
+      const rk = patioRank(p);
+      // Se muestra con el estilo del rango más alto cuyo filtro esté activo
+      let mostrar = null;
+      if (rk >= 4 && filters.has('RFE'))       mostrar = 'RFE';
+      else if (rk >= 3 && filters.has('RFEF')) mostrar = 'RFEF';
+      else if (rk >= 2 && filters.has('R1E'))  mostrar = 'R1E';
+      else if (rk >= 1 && filters.has('R1EF')) mostrar = 'R1EF';
+
+      if (mostrar === 'RFE') {
+        // RF Ext Recibido: relleno + contorno amarillo sólido
         tracePatio();
         ctx.fillStyle = isHoverP ? 'rgba(245,196,0,0.30)' : 'rgba(245,196,0,0.15)';
         ctx.fill();
@@ -820,8 +869,8 @@ function draw() {
         ctx.lineJoin = 'round';
         ctx.setLineDash([]);
         ctx.stroke();
-      } else if (esFichaje && filters.has('RFEF')) {
-        // Fichaje: contorno amarillo punteado, sin relleno
+      } else if (mostrar === 'RFEF') {
+        // RF Ext Fichaje: contorno amarillo punteado, sin relleno
         tracePatio();
         ctx.strokeStyle = COL_RFE;
         ctx.lineWidth = Math.max(2.5, 3.5*scale);
@@ -829,7 +878,27 @@ function draw() {
         ctx.setLineDash([6, 5]);
         ctx.stroke();
         ctx.setLineDash([]);
-      } else if (!esFichaje) {
+      } else if (mostrar === 'R1E') {
+        // R1 Ext Recibido: relleno + contorno naranjo sólido
+        tracePatio();
+        ctx.fillStyle = isHoverP ? 'rgba(232,130,12,0.32)' : 'rgba(232,130,12,0.18)';
+        ctx.fill();
+        tracePatio();
+        ctx.strokeStyle = COL_R1E;
+        ctx.lineWidth = Math.max(2.5, 3.5*scale);
+        ctx.lineJoin = 'round';
+        ctx.setLineDash([]);
+        ctx.stroke();
+      } else if (mostrar === 'R1EF') {
+        // R1 Ext Fichaje: contorno naranjo punteado, sin relleno
+        tracePatio();
+        ctx.strokeStyle = COL_R1E;
+        ctx.lineWidth = Math.max(2.5, 3.5*scale);
+        ctx.lineJoin = 'round';
+        ctx.setLineDash([6, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else if (rk === 0) {
         // Sin marcar: contorno punteado negro
         tracePatio();
         ctx.strokeStyle = '#333';
@@ -1295,8 +1364,10 @@ function updateStats(){
   document.getElementById('s-r1').textContent=c.R1||0;
   document.getElementById('s-rff').textContent=c.RFF||0;
   document.getElementById('s-rf').textContent=c.RF||0;
-  document.getElementById('s-rfef').textContent=Object.values(patios).filter(p=>p.rfExtF||p.rfExt).length;
-  document.getElementById('s-rfe').textContent=Object.values(patios).filter(p=>p.rfExt).length;
+  document.getElementById('s-r1ef').textContent=Object.values(patios).filter(p=>patioRank(p)>=1).length;
+  document.getElementById('s-r1e').textContent=Object.values(patios).filter(p=>patioRank(p)>=2).length;
+  document.getElementById('s-rfef').textContent=Object.values(patios).filter(p=>patioRank(p)>=3).length;
+  document.getElementById('s-rfe').textContent=Object.values(patios).filter(p=>patioRank(p)>=4).length;
   document.getElementById('s-nd').textContent=c.ND||0;
 }
 
@@ -1311,61 +1382,66 @@ function hitTestPatio(cx,cy){
 function showPatioCtxMenu(mx,my,p){
   ctxMenu.innerHTML='';
   const ttl=document.createElement('div'); ttl.className='ctx-ttl';
-  ttl.textContent='Patio — RF Exterior';
+  ttl.textContent='Patio — R Exterior';
   ctxMenu.appendChild(ttl);
   const today = getTodayISO();
-  const esRecibida = !!p.rfExt;
-  const esFichaje  = !!p.rfExtF || esRecibida; // recibida implica fichaje
-  // Bloqueos por cierre de día (solo Encargado de Calidad)
-  const lockRecibida = isTerreno && lastCierreDate && p.rfExtDate  && p.rfExtDate  < today && p.rfExtDate  <= lastCierreDate;
-  const lockFichaje  = isTerreno && lastCierreDate && p.rfExtFDate && p.rfExtFDate < today && p.rfExtFDate <= lastCierreDate;
+  const curRank = patioRank(p);
   const patioRef = () => ref(db,'uribe/patios/'+p.id);
 
-  // ── Marcar Fichaje ──
-  if(!esFichaje){
-    const bf=document.createElement('button');
-    bf.innerHTML='<strong>🟡 Marcar RF Exterior Fichaje</strong>';
-    bf.style.color='#8a7000';
-    bf.onclick=()=>{ update(patioRef(),{rfExtF:true,rfExtFDate:getTodayISO()}); ctxMenu.style.display='none'; };
-    ctxMenu.appendChild(bf);
+  // ¿Se puede bajar hasta targetRank sin tocar días ya cerrados?
+  function canLowerPatio(targetRank){
+    if (!isTerreno) return true;      // admin siempre puede
+    if (!lastCierreDate) return true; // sin cierres, nada protegido
+    for (let r = targetRank; r < curRank; r++){
+      const campoFecha = PATIO_FIELDS[PATIO_RANK_KEYS[r]][1];
+      const d = p[campoFecha];
+      if (!d || (d < today && d <= lastCierreDate)) return false;
+    }
+    return true;
   }
 
-  // ── Marcar / quitar Recibida ──
-  const bmrk=document.createElement('button');
-  if(esRecibida){
-    if(lockRecibida){
-      bmrk.textContent='🔒 RF Exterior Recibida bloqueado';
-      bmrk.style.color='#bbb'; bmrk.style.fontSize='11px'; bmrk.style.cursor='not-allowed'; bmrk.disabled=true;
+  // Deja el patio exactamente en el rango pedido (marca lo anterior, limpia lo posterior)
+  function setPatioRank(target){
+    const datos = {};
+    PATIO_RANK_KEYS.forEach((k,i) => {
+      const [campo, campoFecha] = PATIO_FIELDS[k];
+      if (i+1 <= target){
+        if (!p[campo]) { datos[campo]=true; datos[campoFecha]=getTodayISO(); }
+      } else {
+        if (p[campo]) { datos[campo]=null; datos[campoFecha]=null; }
+      }
+    });
+    if (Object.keys(datos).length) update(patioRef(), datos);
+    ctxMenu.style.display='none';
+  }
+
+  [['R1EF','🟠 Marcar R1 Ext Fichaje'],
+   ['R1E','🟠 Marcar R1 Ext Recibido'],
+   ['RFEF','🟡 Marcar RF Ext Fichaje'],
+   ['RFE','✅ Marcar RF Ext Recibido']].forEach(([k,label])=>{
+    const b=document.createElement('button');
+    const target = PATIO_RANK_OF[k];
+    const isDisabled = target < curRank && !canLowerPatio(target);
+    b.innerHTML = (curRank===target ? '<strong>'+label+'</strong>' : label);
+    if(isDisabled){
+      b.disabled=true; b.style.opacity='0.3'; b.style.cursor='not-allowed';
     } else {
-      bmrk.textContent='↩ Quitar RF Exterior Recibida';
-      bmrk.style.color='#888';
-      bmrk.onclick=()=>{ update(patioRef(),{rfExt:false,rfExtDate:null}); ctxMenu.style.display='none'; };
+      b.onclick=()=>setPatioRank(target);
     }
+    ctxMenu.appendChild(b);
+  });
+
+  const sepP=document.createElement('div'); sepP.className='sep'; ctxMenu.appendChild(sepP);
+  const bclear=document.createElement('button');
+  if(curRank>0 && !canLowerPatio(0)){
+    bclear.textContent='🔒 Bloqueado (cierre de día registrado)';
+    bclear.style.color='#bbb'; bclear.style.fontSize='11px'; bclear.style.cursor='not-allowed'; bclear.disabled=true;
   } else {
-    bmrk.innerHTML='<strong>✅ Marcar RF Exterior Recibida</strong>';
-    bmrk.style.color='#7a6000';
-    bmrk.onclick=()=>{
-      // Si nunca pasó por fichaje, se registra el fichaje con la misma fecha
-      const datos={rfExt:true,rfExtDate:getTodayISO()};
-      if(!p.rfExtF){ datos.rfExtF=true; datos.rfExtFDate=getTodayISO(); }
-      update(patioRef(),datos); ctxMenu.style.display='none';
-    };
+    bclear.textContent='↩ Limpiar estado';
+    bclear.style.color='#888';
+    bclear.onclick=()=>setPatioRank(0);
   }
-  ctxMenu.appendChild(bmrk);
-
-  // ── Quitar fichaje (solo si está en fichaje y aún no recibida) ──
-  if(esFichaje && !esRecibida){
-    const bqf=document.createElement('button');
-    if(lockFichaje){
-      bqf.textContent='🔒 RF Exterior Fichaje bloqueado';
-      bqf.style.color='#bbb'; bqf.style.fontSize='11px'; bqf.style.cursor='not-allowed'; bqf.disabled=true;
-    } else {
-      bqf.textContent='↩ Quitar RF Exterior Fichaje';
-      bqf.style.color='#888';
-      bqf.onclick=()=>{ update(patioRef(),{rfExtF:null,rfExtFDate:null}); ctxMenu.style.display='none'; };
-    }
-    ctxMenu.appendChild(bqf);
-  }
+  ctxMenu.appendChild(bclear);
   // Botón copiar forma (solo admin)
   if(isAdmin){
     const sepc=document.createElement('div'); sepc.className='sep'; ctxMenu.appendChild(sepc);
@@ -1418,8 +1494,10 @@ function mobileUpdateStats() {
   document.getElementById('ms-r1').textContent=c.R1||0;
   document.getElementById('ms-rff').textContent=c.RFF||0;
   document.getElementById('ms-rf').textContent=c.RF||0;
-  document.getElementById('ms-rfef').textContent=Object.values(patios).filter(p=>p.rfExtF||p.rfExt).length;
-  document.getElementById('ms-rfe').textContent=Object.values(patios).filter(p=>p.rfExt).length;
+  document.getElementById('ms-r1ef').textContent=Object.values(patios).filter(p=>patioRank(p)>=1).length;
+  document.getElementById('ms-r1e').textContent=Object.values(patios).filter(p=>patioRank(p)>=2).length;
+  document.getElementById('ms-rfef').textContent=Object.values(patios).filter(p=>patioRank(p)>=3).length;
+  document.getElementById('ms-rfe').textContent=Object.values(patios).filter(p=>patioRank(p)>=4).length;
   document.getElementById('ms-nd').textContent=c.ND||0;
 }
 
@@ -1603,7 +1681,7 @@ onValue(cierreRef, snap => {
 });
 
 function getCounts() {
-  const c = {R0:0, R1F:0, R1:0, RFF:0, RF:0, ND:0, RFEF:0, RFE:0, total:0};
+  const c = {R0:0, R1F:0, R1:0, RFF:0, RF:0, ND:0, R1EF:0, R1E:0, RFEF:0, RFE:0, total:0};
   Object.values(houses).forEach(h => {
     const rank = STATE_RANK[h.state||'ND'];
     if(rank>=1) c.R0++;
@@ -1614,8 +1692,11 @@ function getCounts() {
     if(rank===0) c.ND++;
     c.total++;
   });
-  c.RFEF = Object.values(patios).filter(p=>p.rfExtF||p.rfExt).length; // recibida implica fichaje
-  c.RFE = Object.values(patios).filter(p=>p.rfExt).length;
+  // Patios: cadena acumulativa R1 Ext Fichaje → R1 Ext Recibido → RF Ext Fichaje → RF Ext Recibido
+  c.R1EF = Object.values(patios).filter(p=>patioRank(p)>=1).length;
+  c.R1E  = Object.values(patios).filter(p=>patioRank(p)>=2).length;
+  c.RFEF = Object.values(patios).filter(p=>patioRank(p)>=3).length;
+  c.RFE  = Object.values(patios).filter(p=>patioRank(p)>=4).length;
   return c;
 }
 
@@ -1641,7 +1722,13 @@ window.mostrarCierreDia = async () => {
   } else {
     keyAnterior = keys.length > 0 ? keys[keys.length-1] : null;
   }
-  const anterior = keyAnterior ? cierres[keyAnterior].acumulado : {R0:0, R1F:0, R1:0, RFF:0, RF:0, RFEF:0, RFE:0};
+  const anterior = keyAnterior ? cierres[keyAnterior].acumulado : {R0:0, R1F:0, R1:0, RFF:0, RF:0, R1EF:0, R1E:0, RFEF:0, RFE:0};
+  // Registros antiguos: si falta un rango de patio, se hereda del siguiente que exista
+  const antPatio = (k) => {
+    if (anterior[k] !== undefined) return anterior[k] || 0;
+    if (k==='R1EF' || k==='R1E' || k==='RFEF') return (anterior.RFEF !== undefined ? anterior.RFEF : anterior.RFE) || 0;
+    return 0;
+  };
 
   const actual = getCounts();
   const delta = {
@@ -1650,7 +1737,9 @@ window.mostrarCierreDia = async () => {
     R1: actual.R1 - (anterior.R1||0),
     RFF: actual.RFF - ((anterior.RFF !== undefined ? anterior.RFF : anterior.RF) || 0), // cierres previos a RF fichaje: se asume que ocurrio junto con RF recibida
     RF: actual.RF - (anterior.RF||0),
-    RFEF: actual.RFEF - ((anterior.RFEF !== undefined ? anterior.RFEF : anterior.RFE) || 0), // cierres previos a RF ext fichaje: se asume que ocurrio junto con la recibida
+    R1EF: actual.R1EF - antPatio('R1EF'),
+    R1E: actual.R1E - antPatio('R1E'),
+    RFEF: actual.RFEF - antPatio('RFEF'),
     RFE: actual.RFE - (anterior.RFE||0),
   };
 
@@ -1686,18 +1775,27 @@ window.mostrarCierreDia = async () => {
           <div style="font-size:11px;color:#fff;font-weight:600">RF Interior Recibida</div>
           <div style="font-size:24px;font-weight:700;color:#fff">+${delta.RF}</div>
         </div>
+        <div style="background:#FDEBD3;border-radius:8px;padding:10px">
+          <div style="font-size:11px;color:#A85A00;font-weight:600">R1 Exterior Fichaje</div>
+          <div style="font-size:24px;font-weight:700;color:#A85A00">+${delta.R1EF}</div>
+        </div>
+        <div style="background:#FBDAB0;border-radius:8px;padding:10px">
+          <div style="font-size:11px;color:#8F4D00;font-weight:600">R1 Exterior Recibido</div>
+          <div style="font-size:24px;font-weight:700;color:#8F4D00">+${delta.R1E}</div>
+        </div>
         <div style="background:#FDF6DA;border-radius:8px;padding:10px">
           <div style="font-size:11px;color:#8a7000;font-weight:600">RF Exterior Fichaje</div>
           <div style="font-size:24px;font-weight:700;color:#8a7000">+${delta.RFEF}</div>
         </div>
         <div style="background:#FFF9C4;border-radius:8px;padding:10px">
-          <div style="font-size:11px;color:#7a6000;font-weight:600">RF Exterior Recibida</div>
+          <div style="font-size:11px;color:#7a6000;font-weight:600">RF Exterior Recibido</div>
           <div style="font-size:24px;font-weight:700;color:#7a6000">+${delta.RFE}</div>
         </div>
       </div>
     </div>
     <div style="font-size:11px;color:#aaa;text-align:center">
-      Acumulado total: R0=${actual.R0} · R1F=${actual.R1F} · R1=${actual.R1} · RFF=${actual.RFF} · RF=${actual.RF} · RFEF=${actual.RFEF} · RFE=${actual.RFE}
+      Acumulado total: R0=${actual.R0} · R1F=${actual.R1F} · R1=${actual.R1} · RFF=${actual.RFF} · RF=${actual.RF}<br>
+      R1EF=${actual.R1EF} · R1E=${actual.R1E} · RFEF=${actual.RFEF} · RFE=${actual.RFE}
     </div>
   `;
 
@@ -1705,7 +1803,7 @@ window.mostrarCierreDia = async () => {
   document.getElementById('btn-confirmar-cierre').textContent = cierreHoy ? 'Reemplazar cierre de hoy' : 'Confirmar cierre';
 
   window._pendingCierre = {
-    delta, acumulado: {R0:actual.R0,R1F:actual.R1F,R1:actual.R1,RFF:actual.RFF,RF:actual.RF,RFEF:actual.RFEF,RFE:actual.RFE},
+    delta, acumulado: {R0:actual.R0,R1F:actual.R1F,R1:actual.R1,RFF:actual.RFF,RF:actual.RF,R1EF:actual.R1EF,R1E:actual.R1E,RFEF:actual.RFEF,RFE:actual.RFE},
     fecha: fechaStr, ts: now.toISOString(),
     reemplazarKey: cierreHoyKey || null
   };
@@ -1900,8 +1998,10 @@ window.verHistorial = async () => {
     { key:'R1',  label:'R1 int. (recibida)',  bg:'#EAF3DE', color:'#27500A', cellColor:'#27500A' },
     { key:'RFF', label:'RF int. (fichaje)',  bg:'#F1E6F8', color:'#6C2A8C', cellColor:'#6C2A8C' },
     { key:'RF',  label:'RF int. (recibida)',  bg:'#1a1a2e', color:'#ffffff', cellColor:'#1a1a2e' },
+    { key:'R1EF', label:'R1 ext. (fichaje)',  bg:'#FDEBD3', color:'#A85A00', cellColor:'#A85A00' },
+    { key:'R1E', label:'R1 ext. (recibido)',  bg:'#FBDAB0', color:'#8F4D00', cellColor:'#8F4D00' },
     { key:'RFEF', label:'RF ext. (fichaje)',  bg:'#FDF6DA', color:'#8a7000', cellColor:'#8a7000' },
-    { key:'RFE', label:'RF ext. (recibida)',  bg:'#FFF9C4', color:'#7a6000', cellColor:'#7a6000' },
+    { key:'RFE', label:'RF ext. (recibido)',  bg:'#FFF9C4', color:'#7a6000', cellColor:'#7a6000' },
   ];
   // Registros de cierre anteriores a "R1 fichaje"/"RF fichaje" no tienen esos campos — se asume que
   // ese avance ocurrió junto con "R1 recibida"/"RF recibida" (antes eran el mismo paso).
@@ -1910,7 +2010,8 @@ window.verHistorial = async () => {
     if (c.delta[key] !== undefined) return c.delta[key];
     if (key === 'R1F') return c.delta.R1 ?? 0;
     if (key === 'RFF') return c.delta.RF ?? 0;
-    if (key === 'RFEF') return c.delta.RFE ?? 0;
+    // Registros antiguos de patios: se hereda del rango siguiente que exista
+    if (key === 'R1EF' || key === 'R1E' || key === 'RFEF') return c.delta.RFEF ?? c.delta.RFE ?? 0;
     return 0;
   }
   function acumVal(c, key) {
@@ -1918,7 +2019,7 @@ window.verHistorial = async () => {
     if (c.acumulado[key] !== undefined) return c.acumulado[key];
     if (key === 'R1F') return c.acumulado.R1;
     if (key === 'RFF') return c.acumulado.RF;
-    if (key === 'RFEF') return c.acumulado.RFE;
+    if (key === 'R1EF' || key === 'R1E' || key === 'RFEF') return c.acumulado.RFEF ?? c.acumulado.RFE;
     return undefined;
   }
   let html = '';
@@ -1978,7 +2079,7 @@ window.verHistorial = async () => {
         html += `<td style="padding:4px;border:1px solid #eee"></td>`;
       } else {
         html += `<td style="padding:4px 3px;text-align:center;font-size:9px;color:#aaa;border:1px solid #eee;line-height:1.3">
-          <span>${c.acumulado?.R0??'—'}</span><span style="color:#ddd">/</span><span>${acumVal(c,'R1F')??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.R1??'—'}</span><span style="color:#ddd">/</span><span>${acumVal(c,'RFF')??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RF??'—'}</span><span style="color:#ddd">/</span><span>${acumVal(c,'RFEF')??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RFE??'—'}</span>
+          <span>${c.acumulado?.R0??'—'}</span><span style="color:#ddd">/</span><span>${acumVal(c,'R1F')??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.R1??'—'}</span><span style="color:#ddd">/</span><span>${acumVal(c,'RFF')??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RF??'—'}</span><span style="color:#ddd">/</span><span>${acumVal(c,'R1EF')??'—'}</span><span style="color:#ddd">/</span><span>${acumVal(c,'R1E')??'—'}</span><span style="color:#ddd">/</span><span>${acumVal(c,'RFEF')??'—'}</span><span style="color:#ddd">/</span><span>${c.acumulado?.RFE??'—'}</span>
         </td>`;
       }
     });
@@ -2093,11 +2194,12 @@ function capturarPantalla() {
       function _parseFechaAuto(f) { const [d,m,y]=f.split('/'); return new Date(+y,+m-1,+d); }
       const labKeys = keys.filter(k => { const dw=_parseFechaAuto(cierres[k].fecha).getDay(); return dw!==0&&dw!==6; });
       const lastKey = labKeys.length > 0 ? labKeys[labKeys.length-1] : null;
-      const anterior = lastKey ? cierres[lastKey].acumulado : {R0:0,R1F:0,R1:0,RFF:0,RF:0,RFEF:0,RFE:0};
+      const anterior = lastKey ? cierres[lastKey].acumulado : {R0:0,R1F:0,R1:0,RFF:0,RF:0,R1EF:0,R1E:0,RFEF:0,RFE:0};
+      const antP = (k) => anterior[k] !== undefined ? (anterior[k]||0) : ((anterior.RFEF !== undefined ? anterior.RFEF : anterior.RFE) || 0);
       const actual = getCounts();
-      const delta = { R0: actual.R0-(anterior.R0||0), R1F: actual.R1F-((anterior.R1F !== undefined ? anterior.R1F : anterior.R1) || 0), R1: actual.R1-(anterior.R1||0), RFF: actual.RFF-((anterior.RFF !== undefined ? anterior.RFF : anterior.RF) || 0), RF: actual.RF-(anterior.RF||0), RFEF: actual.RFEF-((anterior.RFEF !== undefined ? anterior.RFEF : anterior.RFE) || 0), RFE: actual.RFE-(anterior.RFE||0) };
+      const delta = { R0: actual.R0-(anterior.R0||0), R1F: actual.R1F-((anterior.R1F !== undefined ? anterior.R1F : anterior.R1) || 0), R1: actual.R1-(anterior.R1||0), RFF: actual.RFF-((anterior.RFF !== undefined ? anterior.RFF : anterior.RF) || 0), RF: actual.RF-(anterior.RF||0), R1EF: actual.R1EF-antP('R1EF'), R1E: actual.R1E-antP('R1E'), RFEF: actual.RFEF-antP('RFEF'), RFE: actual.RFE-(anterior.RFE||0) };
       await fbPush(cierreRef, {
-        delta, acumulado: {R0:actual.R0,R1F:actual.R1F,R1:actual.R1,RFF:actual.RFF,RF:actual.RF,RFEF:actual.RFEF,RFE:actual.RFE},
+        delta, acumulado: {R0:actual.R0,R1F:actual.R1F,R1:actual.R1,RFF:actual.RFF,RF:actual.RF,R1EF:actual.R1EF,R1E:actual.R1E,RFEF:actual.RFEF,RFE:actual.RFE},
         fecha: fechaStr, ts: now.toISOString(), auto: true
       });
       showToast('🔒 Cierre automático del día guardado');
