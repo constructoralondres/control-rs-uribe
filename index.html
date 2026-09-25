@@ -846,7 +846,8 @@ function draw() {
     });
   }
 
-  // ── Patios R Exterior (R1 Fichaje → R1 Recibido → RF Fichaje → RF Recibido) ──
+  // ── Patios R Exterior — capas acumulativas (cada fase se suma a la anterior) ──
+  // rango 1 R1 Ext Fichaje · 2 R1 Ext Recibido · 3 RF Ext Fichaje · 4 RF Ext Recibido
   if (filters.has('R1EF') || filters.has('R1E') || filters.has('RFEF') || filters.has('RFE')) {
     Object.values(patios).forEach(p => {
       if (!p.pts || p.pts.length < 3) return;
@@ -858,35 +859,23 @@ function draw() {
         ctx.closePath();
       }
       const rk = patioRank(p);
-      // Se muestra con el estilo del rango más alto cuyo filtro esté activo
-      let mostrar = null;
-      if (rk >= 4 && filters.has('RFE'))       mostrar = 'RFE';
-      else if (rk >= 3 && filters.has('RFEF')) mostrar = 'RFEF';
-      else if (rk >= 2 && filters.has('R1E'))  mostrar = 'R1E';
-      else if (rk >= 1 && filters.has('R1EF')) mostrar = 'R1EF';
 
-      if (mostrar === 'RFE') {
-        // RF Ext Recibido: relleno amarillo con poca transparencia
+      // Realce al pasar el mouse (cuando aun no tiene relleno propio)
+      if (isHoverP && rk >= 1 && rk < 4) {
+        tracePatio();
+        ctx.fillStyle = 'rgba(245,196,0,0.18)';
+        ctx.fill();
+      }
+
+      // ── Capa 4 · RF Ext Recibido: relleno amarillo poco transparente (va al fondo) ──
+      if (rk >= 4 && filters.has('RFE')) {
         tracePatio();
         ctx.fillStyle = isHoverP ? 'rgba(245,196,0,0.55)' : 'rgba(245,196,0,0.42)';
         ctx.fill();
-        tracePatio();
-        ctx.strokeStyle = COL_RFE;
-        ctx.lineWidth = Math.max(2.5, 3.5*scale);
-        ctx.lineJoin = 'round';
-        ctx.setLineDash([]);
-        ctx.stroke();
-      } else if (mostrar === 'RFEF') {
-        // RF Ext Fichaje: contorno amarillo sólido y grueso, sin relleno
-        tracePatio();
-        ctx.strokeStyle = COL_RFE;
-        ctx.lineWidth = Math.max(4, 5.5*scale);
-        ctx.lineJoin = 'round';
-        ctx.setLineDash([]);
-        ctx.stroke();
-      } else if (mostrar === 'R1E') {
-        // R1 Ext Recibido: achurado amarillo (líneas diagonales) + contorno fino
-        if (isHoverP) { tracePatio(); ctx.fillStyle='rgba(245,196,0,0.18)'; ctx.fill(); }
+      }
+
+      // ── Capa 2 · R1 Ext Recibido: achurado amarillo ──
+      if (rk >= 2 && filters.has('R1E')) {
         ctx.save();
         tracePatio();
         ctx.clip();
@@ -906,23 +895,38 @@ function draw() {
           ctx.stroke();
         }
         ctx.restore();
+        // contorno fino para que se lea el borde del patio
         tracePatio();
         ctx.strokeStyle = COL_RFE;
         ctx.lineWidth = Math.max(1.2, 1.6*scale);
         ctx.lineJoin = 'round';
         ctx.setLineDash([]);
         ctx.stroke();
-      } else if (mostrar === 'R1EF') {
-        // R1 Ext Fichaje: contorno naranjo punteado, sin relleno
+      }
+
+      // ── Capa 3 · RF Ext Fichaje: contorno amarillo sólido y grueso ──
+      if (rk >= 3 && filters.has('RFEF')) {
+        tracePatio();
+        ctx.strokeStyle = COL_RFE;
+        ctx.lineWidth = Math.max(4, 5.5*scale);
+        ctx.lineJoin = 'round';
+        ctx.setLineDash([]);
+        ctx.stroke();
+      }
+
+      // ── Capa 1 · R1 Ext Fichaje: contorno naranjo punteado (queda encima) ──
+      if (rk >= 1 && filters.has('R1EF')) {
         tracePatio();
         ctx.strokeStyle = COL_R1E;
-        ctx.lineWidth = Math.max(2.5, 3.5*scale);
+        ctx.lineWidth = Math.max(2, 2.6*scale);
         ctx.lineJoin = 'round';
         ctx.setLineDash([6, 5]);
         ctx.stroke();
         ctx.setLineDash([]);
-      } else if (rk === 0) {
-        // Sin marcar: contorno punteado negro
+      }
+
+      // Sin marcar: contorno punteado negro
+      if (rk === 0) {
         tracePatio();
         ctx.strokeStyle = '#333';
         ctx.lineWidth = Math.max(1.5, 2*scale);
@@ -933,7 +937,6 @@ function draw() {
       }
     });
   }
-
   updateStats();
 }
 
