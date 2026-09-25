@@ -241,7 +241,14 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
       </button>
       <button class="fbtn active" id="fb-r1e" onclick="toggleFilter(&#39;R1E&#39;,this)">
         <svg width="28" height="20" style="flex-shrink:0">
-          <rect x="2" y="2" width="24" height="16" fill="rgba(245,196,0,0.18)" stroke="#F5C400" stroke-width="1.2"></rect>
+          <defs><clippath id="r1eclip"><rect x="2" y="2" width="24" height="16"></rect></clippath></defs>
+          <rect x="2" y="2" width="24" height="16" fill="none" stroke="#F5C400" stroke-width="1.5"></rect>
+          <g clip-path="url(#r1eclip)" stroke="#F5C400" stroke-width="1.2">
+            <line x1="-4" y1="2" x2="14" y2="20"></line>
+            <line x1="4" y1="2" x2="22" y2="20"></line>
+            <line x1="12" y1="2" x2="30" y2="20"></line>
+            <line x1="20" y1="2" x2="38" y2="20"></line>
+          </g>
         </svg>
         R1 Exterior Recibido
       </button>
@@ -878,10 +885,27 @@ function draw() {
         ctx.setLineDash([]);
         ctx.stroke();
       } else if (mostrar === 'R1E') {
-        // R1 Ext Recibido: relleno amarillo con harta transparencia
+        // R1 Ext Recibido: achurado amarillo (líneas diagonales) + contorno fino
+        if (isHoverP) { tracePatio(); ctx.fillStyle='rgba(245,196,0,0.18)'; ctx.fill(); }
+        ctx.save();
         tracePatio();
-        ctx.fillStyle = isHoverP ? 'rgba(245,196,0,0.26)' : 'rgba(245,196,0,0.13)';
-        ctx.fill();
+        ctx.clip();
+        const minXe = Math.min(...ppts.map(pt=>pt.x));
+        const maxXe = Math.max(...ppts.map(pt=>pt.x));
+        const minYe = Math.min(...ppts.map(pt=>pt.y));
+        const maxYe = Math.max(...ppts.map(pt=>pt.y));
+        const gapE = Math.max(6, 9*scale);
+        ctx.strokeStyle = COL_RFE;
+        ctx.lineWidth = Math.max(1.2, 1.8*scale);
+        ctx.setLineDash([]);
+        const spanE = (maxXe-minXe) + (maxYe-minYe);
+        for (let d = -spanE; d < spanE; d += gapE) {
+          ctx.beginPath();
+          ctx.moveTo(minXe + d, minYe);
+          ctx.lineTo(minXe + d + (maxYe-minYe), maxYe);
+          ctx.stroke();
+        }
+        ctx.restore();
         tracePatio();
         ctx.strokeStyle = COL_RFE;
         ctx.lineWidth = Math.max(1.2, 1.6*scale);
