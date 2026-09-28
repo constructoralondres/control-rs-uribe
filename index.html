@@ -87,13 +87,27 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
 }
 #mobile-stats {
   display: flex;
-  justify-content: space-around;
-  padding: 6px 8px 2px;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 7px 8px;
   border-bottom: 1px solid #f0ede6;
 }
-.mob-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.mob-stat span { font-size: 10px; color: #888; }
-.mob-stat strong { font-size: 15px; color: #1a1a2e; }
+/* Cada cuadro es a la vez contador y botón de filtro */
+.mob-stat {
+  flex: 1 1 auto; min-width: 62px;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 6px 4px; border-radius: 9px; border: 2px solid transparent;
+  font-family: inherit; line-height: 1.15;
+}
+.mob-stat span { font-size: 10px; font-weight: 600; opacity: .85; }
+.mob-stat strong { font-size: 17px; }
+.mob-chip { cursor: pointer; position: relative; transition: opacity .12s, filter .12s; }
+.mob-chip.off { opacity: .32; filter: grayscale(.85); }
+.mob-chip.off::after {
+  content: ''; position: absolute; left: 6px; right: 6px; top: 50%;
+  border-top: 2px solid currentColor; opacity: .8;
+}
+.mob-total { border: 2px dashed #ddd; }
 #mobile-actions {
   display: flex;
   justify-content: space-around;
@@ -387,53 +401,21 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
 
 <div id="mobile-bar">
   <div id="mobile-stats">
-    <div class="mob-stat" style="border-right:1px solid #eee;padding-right:10px">
-      <span>Total</span><strong id="ms-total">0</strong>
-    </div>
-    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#E6F1FB;border-radius:6px 0 0 6px">
-      <span style="color:#0C447C;font-weight:600">R0 Int.</span><strong id="ms-r0" style="color:#0C447C">0</strong>
-    </div>
-    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#E0F2F1">
-      <span style="color:#00695C;font-weight:600">R1 Fich.</span><strong id="ms-r1f" style="color:#00695C">0</strong>
-    </div>
-    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#EAF3DE">
-      <span style="color:#27500A;font-weight:600">R1 Recib.</span><strong id="ms-r1" style="color:#27500A">0</strong>
-    </div>
-    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#F1E6F8">
-      <span style="color:#6C2A8C;font-weight:600">RF Fich.</span><strong id="ms-rff" style="color:#6C2A8C">0</strong>
-    </div>
-    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#1a1a2e;border-radius:0 6px 6px 0">
-      <span style="color:#fff;font-weight:600">RF Recib.</span><strong id="ms-rf" style="color:#fff">0</strong>
-    </div>
-    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#FFF9C4">
-      <span style="color:#A85A00;font-weight:600">R1E Fich.</span><strong id="ms-r1ef" style="color:#A85A00">0</strong>
-    </div>
-    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#FFFBE0">
-      <span style="color:#8a7000;font-weight:600">R1E Recib.</span><strong id="ms-r1e" style="color:#8a7000">0</strong>
-    </div>
-    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#FFF3B0">
-      <span style="color:#7a6000;font-weight:600">RFE Fich.</span><strong id="ms-rfef" style="color:#7a6000">0</strong>
-    </div>
-    <div class="mob-stat" style="border-right:1px solid #eee;padding:0 10px;background:#F5DC55">
-      <span style="color:#5C4A00;font-weight:600">RFE Recib.</span><strong id="ms-rfe" style="color:#5C4A00">0</strong>
-    </div>
-    <div class="mob-stat" style="padding-left:10px">
-      <span style="color:#888">S/D</span><strong id="ms-nd">0</strong>
-    </div>
+    <div class="mob-stat mob-total" style="background:#f5f3ef;color:#444"><span>Total</span><strong id="ms-total">0</strong></div>
+    <button type="button" class="mob-stat mob-chip" id="msc-r0" onclick="toggleMobileFilter('R0')" style="background:#E6F1FB;color:#0C447C"><span>R0 Int.</span><strong id="ms-r0">0</strong></button>
+    <button type="button" class="mob-stat mob-chip" id="msc-r1f" onclick="toggleMobileFilter('R1F')" style="background:#E0F2F1;color:#00695C"><span>R1 Fich.</span><strong id="ms-r1f">0</strong></button>
+    <button type="button" class="mob-stat mob-chip" id="msc-r1" onclick="toggleMobileFilter('R1')" style="background:#EAF3DE;color:#27500A"><span>R1 Recib.</span><strong id="ms-r1">0</strong></button>
+    <button type="button" class="mob-stat mob-chip" id="msc-rff" onclick="toggleMobileFilter('RFF')" style="background:#F1E6F8;color:#6C2A8C"><span>RF Fich.</span><strong id="ms-rff">0</strong></button>
+    <button type="button" class="mob-stat mob-chip" id="msc-rf" onclick="toggleMobileFilter('RF')" style="background:#1a1a2e;color:#ffffff"><span>RF Recib.</span><strong id="ms-rf">0</strong></button>
+    <button type="button" class="mob-stat mob-chip" id="msc-r1ef" onclick="toggleMobileFilter('R1EF')" style="background:#FDEBD3;color:#A85A00"><span>R1E Fich.</span><strong id="ms-r1ef">0</strong></button>
+    <button type="button" class="mob-stat mob-chip" id="msc-r1e" onclick="toggleMobileFilter('R1E')" style="background:#FFFBE0;color:#8a7000"><span>R1E Recib.</span><strong id="ms-r1e">0</strong></button>
+    <button type="button" class="mob-stat mob-chip" id="msc-rfef" onclick="toggleMobileFilter('RFEF')" style="background:#FFF3B0;color:#7a6000"><span>RFE Fich.</span><strong id="ms-rfef">0</strong></button>
+    <button type="button" class="mob-stat mob-chip" id="msc-rfe" onclick="toggleMobileFilter('RFE')" style="background:#F5DC55;color:#5C4A00"><span>RFE Recib.</span><strong id="ms-rfe">0</strong></button>
+    <button type="button" class="mob-stat mob-chip" id="msc-nd" onclick="toggleMobileFilter('ND')" style="background:#F1EFE8;color:#5F5E5A"><span>S/D</span><strong id="ms-nd">0</strong></button>
   </div>
   <div id="mobile-perfil-bar" style="display:none;padding:4px 12px;font-size:11px;font-weight:600;color:#fff;text-align:center"></div>
   <div id="mobile-house-label">Mantén presionada una vivienda para marcar su estado</div>
   <div id="mobile-actions" style="flex-wrap:wrap;gap:6px;padding:6px 12px 10px">
-    <button id="mfb-r0" class="mob-btn" onclick="toggleMobileFilter(&#39;R0&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#E6F1FB;color:#0C447C;font-size:12px;border-radius:8px;border:2px solid #0C447C;flex-direction:column">R0 Int.<span style="font-size:9px">ver</span></button>
-    <button id="mfb-r1f" class="mob-btn" onclick="toggleMobileFilter(&#39;R1F&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#E0F2F1;color:#00695C;font-size:12px;border-radius:8px;border:2px solid #00695C;flex-direction:column">R1 Fich.<span style="font-size:9px">ver</span></button>
-    <button id="mfb-r1" class="mob-btn" onclick="toggleMobileFilter(&#39;R1&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#EAF3DE;color:#27500A;font-size:12px;border-radius:8px;border:2px solid #27500A;flex-direction:column">R1 Recib.<span style="font-size:9px">ver</span></button>
-    <button id="mfb-rff" class="mob-btn" onclick="toggleMobileFilter(&#39;RFF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#F1E6F8;color:#6C2A8C;font-size:12px;border-radius:8px;border:2px solid #6C2A8C;flex-direction:column">RF Fich.<span style="font-size:9px">ver</span></button>
-    <button id="mfb-rf" class="mob-btn" onclick="toggleMobileFilter(&#39;RF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#1a1a2e;color:#fff;font-size:12px;border-radius:8px;border:2px solid #1a1a2e;flex-direction:column">RF Recib.<span style="font-size:9px">ver</span></button>
-    <button id="mfb-nd" class="mob-btn" onclick="toggleMobileFilter(&#39;ND&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#f5f3ef;color:#666;font-size:12px;border-radius:8px;border:2px solid #ccc;flex-direction:column">S/D<span style="font-size:9px">ver</span></button>
-    <button id="mfb-r1ef" class="mob-btn" onclick="toggleMobileFilter(&#39;R1EF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#FDEBD3;color:#A85A00;font-size:12px;border-radius:8px;border:2px dashed #A85A00;flex-direction:column">R1E Fich.<span style="font-size:9px">ver</span></button>
-    <button id="mfb-r1e" class="mob-btn" onclick="toggleMobileFilter(&#39;R1E&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#FFFBE0;color:#8a7000;font-size:12px;border-radius:8px;border:1px solid #C9A800;flex-direction:column">R1E Recib.<span style="font-size:9px">ver</span></button>
-    <button id="mfb-rfef" class="mob-btn" onclick="toggleMobileFilter(&#39;RFEF&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#fff;color:#7a6000;font-size:12px;border-radius:8px;border:4px solid #F5C400;flex-direction:column">RFE Fich.<span style="font-size:9px">ver</span></button>
-    <button id="mfb-rfe" class="mob-btn" onclick="toggleMobileFilter(&#39;RFE&#39;)" style="flex:1;min-width:60px;padding:7px 4px;background:#F5DC55;color:#5C4A00;font-size:12px;border-radius:8px;border:2px solid #C9A800;flex-direction:column">RFE Recib.<span style="font-size:9px">ver</span></button>
 
     <button onclick="verHistorial()" style="flex:1;min-width:90px;padding:7px 4px;background:#f0ede6;color:#555;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:flex">📅 Historial<span style="font-size:9px">avance</span></button>
     <button onclick="verDetalle()" style="flex:1;min-width:90px;padding:7px 4px;background:#f0ede6;color:#555;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:flex">📊 Detalle<span style="font-size:9px">tipología</span></button>
@@ -1369,8 +1351,8 @@ window.setMode=m=>{
   draw();
 };
 window.toggleFilter=(f,btn)=>{
-  if(filters.has(f)){filters.delete(f);btn.classList.remove('active');}
-  else{filters.add(f);btn.classList.add('active');}
+  if(filters.has(f)) filters.delete(f); else filters.add(f);
+  sincronizarFiltro(f);
   draw();
 };
 function updateStats(){
@@ -1669,23 +1651,18 @@ if (isMobile()) {
 }
 
 // ── Filtros móvil ─────────────────────────────────────
-window.toggleMobileFilter = (f) => {
-  const btn = document.getElementById('mfb-' + f.toLowerCase());
-  if (filters.has(f)) {
-    filters.delete(f);
-    btn.style.opacity = '0.4';
-    btn.querySelector('span').textContent = 'oculto';
-  } else {
-    filters.add(f);
-    btn.style.opacity = '1';
-    btn.querySelector('span').textContent = 'ver';
-  }
-  // Sincronizar con filtros desktop
+// Refleja el estado del filtro en el chip móvil y en el botón de escritorio
+function sincronizarFiltro(f){
+  const activo = filters.has(f);
+  const chip = document.getElementById('msc-' + f.toLowerCase());
+  if (chip) chip.classList.toggle('off', !activo);
   const deskBtn = document.getElementById('fb-' + f.toLowerCase());
-  if (deskBtn) {
-    if (filters.has(f)) deskBtn.classList.add('active');
-    else deskBtn.classList.remove('active');
-  }
+  if (deskBtn) deskBtn.classList.toggle('active', activo);
+}
+
+window.toggleMobileFilter = (f) => {
+  if (filters.has(f)) filters.delete(f); else filters.add(f);
+  sincronizarFiltro(f);
   draw();
 };
 
