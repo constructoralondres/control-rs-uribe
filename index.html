@@ -247,14 +247,14 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
       <button class="fbtn active" id="fb-r0" onclick="toggleFilter(&#39;R0&#39;,this)">
         <svg width="28" height="20" style="flex-shrink:0">
           <rect x="2" y="2" width="24" height="16" fill="none" stroke="#0C447C" stroke-width="2.5"></rect>
-          <line x1="2" y1="2" x2="26" y2="18" stroke="#0C447C" stroke-width="1.5"></line>
         </svg>
         R0 Interior
       </button>
       <button class="fbtn active" id="fb-r1f" onclick="toggleFilter(&#39;R1F&#39;,this)">
         <svg width="28" height="20" style="flex-shrink:0">
-          <rect x="2" y="2" width="24" height="16" fill="rgba(0,105,92,0.15)" stroke="#00695C" stroke-width="2.5"></rect>
-          <circle cx="14" cy="10" r="5" fill="none" stroke="#00695C" stroke-width="1.5"></circle>
+          <rect x="2" y="2" width="24" height="16" fill="none" stroke="#00695C" stroke-width="2.5"></rect>
+          <line x1="2" y1="2" x2="26" y2="18" stroke="#00695C" stroke-width="1.6"></line>
+          <line x1="26" y1="2" x2="2" y2="18" stroke="#00695C" stroke-width="1.6"></line>
         </svg>
         R1 Interior Fichaje
       </button>
@@ -262,11 +262,27 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
         <svg width="28" height="20" style="flex-shrink:0">
           <defs><clippath id="r1clip2"><rect x="2" y="2" width="24" height="16"></rect></clippath></defs>
           <rect x="2" y="2" width="24" height="16" fill="none" stroke="#27500A" stroke-width="2.5"></rect>
-          <g clip-path="url(#r1clip2)" stroke="#27500A" stroke-width="1">
-            <line x1="-4" y1="2" x2="14" y2="20"></line>
-            <line x1="4" y1="2" x2="22" y2="20"></line>
-            <line x1="12" y1="2" x2="30" y2="20"></line>
-            <line x1="20" y1="2" x2="38" y2="20"></line>
+          <g clip-path="url(#r1clip2)" stroke="#27500A" stroke-width="0.8">
+            <line x1="-16" y1="2" x2="0" y2="18"></line>
+            <line x1="-16" y1="2" x2="-32" y2="18"></line>
+            <line x1="-11" y1="2" x2="5" y2="18"></line>
+            <line x1="-11" y1="2" x2="-27" y2="18"></line>
+            <line x1="-6" y1="2" x2="10" y2="18"></line>
+            <line x1="-6" y1="2" x2="-22" y2="18"></line>
+            <line x1="-1" y1="2" x2="15" y2="18"></line>
+            <line x1="-1" y1="2" x2="-17" y2="18"></line>
+            <line x1="4" y1="2" x2="20" y2="18"></line>
+            <line x1="4" y1="2" x2="-12" y2="18"></line>
+            <line x1="9" y1="2" x2="25" y2="18"></line>
+            <line x1="9" y1="2" x2="-7" y2="18"></line>
+            <line x1="14" y1="2" x2="30" y2="18"></line>
+            <line x1="14" y1="2" x2="-2" y2="18"></line>
+            <line x1="19" y1="2" x2="35" y2="18"></line>
+            <line x1="19" y1="2" x2="3" y2="18"></line>
+            <line x1="24" y1="2" x2="40" y2="18"></line>
+            <line x1="24" y1="2" x2="8" y2="18"></line>
+            <line x1="29" y1="2" x2="45" y2="18"></line>
+            <line x1="29" y1="2" x2="13" y2="18"></line>
           </g>
         </svg>
         R1 Interior Recibida
@@ -855,7 +871,7 @@ function draw() {
     ctx.fillStyle = isHover ? 'rgba(100,140,200,0.18)' : 'rgba(255,255,255,0.01)';
     ctx.fill();
 
-    // ── R0: contorno azul grueso + línea diagonal — si rank >= 1 y filtro R0 activo ──
+    // ── R0: solo contorno azul grueso — si rank >= 1 y filtro R0 activo ──
     if (rank >= 1 && verEstado('R0')) {
       // Contorno
       tracePath();
@@ -864,45 +880,37 @@ function draw() {
       ctx.lineJoin = 'round';
       ctx.setLineDash([]);
       ctx.stroke();
-      // Línea diagonal de esquina a esquina (dentro del polígono)
+    }
+
+    // ── R1F: contorno + 2 líneas cruzadas (fichaje) ─ si rank >= 2 y filtro R1F activo ──
+    if (rank >= 2 && verEstado('R1F')) {
+      // Contorno
+      tracePath();
+      ctx.strokeStyle = COL_R1F;
+      ctx.lineWidth = Math.max(2, 3*scale);
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([]);
+      ctx.stroke();
+      // Dos líneas cruzadas de esquina a esquina
       ctx.save();
       tracePath();
       ctx.clip();
-      const minX0 = Math.min(...pts.map(p=>p.x));
-      const maxX0 = Math.max(...pts.map(p=>p.x));
-      const minY0 = Math.min(...pts.map(p=>p.y));
-      const maxY0 = Math.max(...pts.map(p=>p.y));
-      ctx.beginPath();
-      ctx.moveTo(minX0, minY0);
-      ctx.lineTo(maxX0, maxY0);
-      ctx.strokeStyle = COL_R0;
-      ctx.lineWidth = Math.max(1.5, 2*scale);
+      const minX1 = Math.min(...pts.map(p=>p.x));
+      const maxX1 = Math.max(...pts.map(p=>p.x));
+      const minY1 = Math.min(...pts.map(p=>p.y));
+      const maxY1 = Math.max(...pts.map(p=>p.y));
+      ctx.strokeStyle = COL_R1F;
+      ctx.lineWidth = Math.max(1.6, 2.2*scale);
+      ctx.lineCap = 'round';
       ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(minX1, minY1); ctx.lineTo(maxX1, maxY1);
+      ctx.moveTo(maxX1, minY1); ctx.lineTo(minX1, maxY1);
       ctx.stroke();
       ctx.restore();
     }
 
-    // ── R1F: capa verde azulado + circulo hueco, sin tick (fichaje) ─ si rank >= 2 y filtro R1F activo ──
-    if (rank >= 2 && verEstado('R1F')) {
-      tracePath();
-      ctx.fillStyle = 'rgba(0,105,92,0.16)';
-      ctx.fill();
-      const cx1f = pts.reduce((a,p)=>a+p.x,0)/pts.length;
-      const cy1f = pts.reduce((a,p)=>a+p.y,0)/pts.length;
-      const r1f = Math.max(7, 9*scale);
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.setLineDash([]);
-      ctx.beginPath();
-      ctx.arc(cx1f, cy1f, r1f, 0, Math.PI*2);
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.fill();
-      ctx.strokeStyle = COL_R1F;
-      ctx.lineWidth = Math.max(1.8, 2.5*scale);
-      ctx.stroke();
-    }
-
-    // ── R1: contorno verde + hachura diagonal — si rank >= 3 y filtro R1 activo ──
+    // ── R1: contorno verde + hachura cruzada densa — si rank >= 3 y filtro R1 activo ──
     if (rank >= 3 && verEstado('R1')) {
       // Contorno verde
       tracePath();
@@ -919,15 +927,21 @@ function draw() {
       const maxX = Math.max(...pts.map(p=>p.x));
       const minY = Math.min(...pts.map(p=>p.y));
       const maxY = Math.max(...pts.map(p=>p.y));
-      const gap = Math.max(6, 9*scale);
+      const gap = Math.max(4, 5.5*scale);   // más juntas que antes
       ctx.strokeStyle = COL_R1;
-      ctx.lineWidth = Math.max(1, 1.5*scale);
+      ctx.lineWidth = Math.max(0.9, 1.2*scale);
       ctx.setLineDash([]);
-      const span = (maxX-minX) + (maxY-minY);
+      const alto = maxY - minY;
+      const span = (maxX-minX) + alto;
+      // Hachura en las dos direcciones → malla cruzada
       for(let d = -span; d < span; d += gap) {
         ctx.beginPath();
         ctx.moveTo(minX + d, minY);
-        ctx.lineTo(minX + d + (maxY-minY), maxY);
+        ctx.lineTo(minX + d + alto, maxY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(minX + d, minY);
+        ctx.lineTo(minX + d - alto, maxY);
         ctx.stroke();
       }
       ctx.restore();
