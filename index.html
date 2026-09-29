@@ -9,8 +9,7 @@
 body{font-family:system-ui,sans-serif;background:#f5f3ef;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 #header{background:#fff;border-bottom:1px solid #e0ddd6;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 #header-left{display:flex;flex-direction:column;gap:1px}
-#header-left h1{font-size:17px;font-weight:700;color:#1a1a2e;letter-spacing:.01em}
-#header-left h2{font-size:12px;font-weight:400;color:#888}
+#header-left h1{font-size:22px;font-weight:800;color:#1a1a2e;letter-spacing:.01em}
 #header-right{display:flex;align-items:center;gap:16px}
 #header-right img{height:36px;object-fit:contain}
 #header-status{display:flex;align-items:center;gap:6px;font-size:11px;color:#888}
@@ -53,6 +52,9 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
 .ok-btn{background:#1a1a2e;color:#fff;font-weight:500}
 .cancel-btn{background:#f5f3ef;color:#333}
 #live-dot{width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block}
+#tabs-bar{display:flex;gap:6px;padding:6px 16px 0;background:#fff;border-bottom:1px solid #e0ddd6;flex-shrink:0}
+.tab-btn{padding:7px 16px;border:1px solid #e0ddd6;border-bottom:none;background:#f5f3ef;color:#777;font-size:13px;font-weight:600;cursor:pointer;border-radius:8px 8px 0 0;margin-bottom:-1px}
+.tab-btn.active{background:#fff;color:#1a1a2e;border-color:#e0ddd6;border-bottom:1px solid #fff}
 #rs-fases-bar{display:flex;align-items:center;gap:6px;padding:7px 16px;background:#fff;border-bottom:1px solid #e0ddd6;flex-shrink:0;overflow-x:auto;white-space:nowrap}
 .fase-btn{padding:5px 12px;border:1px solid #ddd;background:#fff;color:#555;font-size:12px;cursor:pointer;border-radius:20px;flex-shrink:0}
 .fase-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e;font-weight:600}
@@ -96,7 +98,6 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
 @media (max-width: 768px) {
   #header { padding: 6px 12px; }
   #header-left h1 { font-size: 13px; }
-  #header-left h2 { font-size: 10px; }
   #reloj { display: none; }
   #logo-img { height: 28px; }
   #sidebar { display: none; }
@@ -194,8 +195,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
 
 <div id="header">
   <div id="header-left">
-    <h1>CONTROL DE RS</h1>
-    <h2>Proyecto Armando Uribe</h2>
+    <h1>PROYECTO ARMANDO URIBE (DS19) — BUIN</h1>
   </div>
   <div id="header-right">
     <div id="header-status">
@@ -211,6 +211,10 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
 </div>
 
 <div id="perfil-bar" style="display:none;padding:5px 16px;font-size:12px;font-weight:600;letter-spacing:.03em;flex-shrink:0"></div>
+<!-- Pestañas -->
+<div id="tabs-bar">
+  <button id="tab-rs" class="tab-btn active">📋 Control de Rs</button>
+</div>
 <!-- Sub-pestañas de Control de Rs -->
 <div id="rs-fases-bar">
   <span style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;margin-right:4px">Fase</span>
@@ -934,6 +938,13 @@ function draw() {
       tracePath();
       ctx.fillStyle = 'rgba(108,42,140,0.16)';
       ctx.fill();
+      // Contorno morado grueso, para que la marca se lea sobre el plano
+      tracePath();
+      ctx.strokeStyle = COL_RFF;
+      ctx.lineWidth = Math.max(3, 4*scale);
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([]);
+      ctx.stroke();
       const cxf = pts.reduce((a,p)=>a+p.x,0)/pts.length;
       const cyf = pts.reduce((a,p)=>a+p.y,0)/pts.length;
       const rf2 = Math.max(7, 9*scale);
@@ -955,6 +966,13 @@ function draw() {
       tracePath();
       ctx.fillStyle = 'rgba(0,0,0,0.28)';
       ctx.fill();
+      // Contorno negro grueso
+      tracePath();
+      ctx.strokeStyle = '#111';
+      ctx.lineWidth = Math.max(3.5, 4.5*scale);
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([]);
+      ctx.stroke();
       // Ícono: círculo con tick negro
       const cx2 = pts.reduce((a,p)=>a+p.x,0)/pts.length;
       const cy2 = pts.reduce((a,p)=>a+p.y,0)/pts.length;
