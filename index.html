@@ -386,6 +386,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
     <button class="mbtn" id="btn-salir-terreno" onclick="salirAdmin()" style="color:#c0392b;font-size:11px;display:none">✕ Cerrar sesión</button>
     <button class="mbtn" onclick="verHistorial()" style="font-size:11px;color:#666;margin-top:2px">📅 Ver historial</button>
     <button class="mbtn" onclick="verDetalle()" style="font-size:11px;color:#185FA5;margin-top:2px;font-weight:500">📊 Ver detalle</button>
+    <button class="mbtn" onclick="verTiempos()" style="font-size:11px;color:#185FA5;margin-top:2px;font-weight:500">⏱ Tiempos de subsanación</button>
     <div id="admin-panel" style="display:none;flex-direction:column;gap:5px">
       <div style="height:1px;background:#eee"></div>
       <div class="stitle">Herramientas</div>
@@ -525,6 +526,7 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
 
     <button onclick="verHistorial()" style="flex:1;min-width:90px;padding:7px 4px;background:#f0ede6;color:#555;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:flex">📅 Historial<span style="font-size:9px">avance</span></button>
     <button onclick="verDetalle()" style="flex:1;min-width:90px;padding:7px 4px;background:#f0ede6;color:#555;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:flex">📊 Detalle<span style="font-size:9px">tipología</span></button>
+    <button onclick="verTiempos()" style="flex:1;min-width:90px;padding:7px 4px;background:#f0ede6;color:#555;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:flex">⏱ Tiempos<span style="font-size:9px">subsanación</span></button>
     <button id="mob-btn-cerrar" onclick="mostrarCierreDia()" style="flex:1;min-width:90px;padding:7px 4px;background:#c0392b;color:#fff;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:none">🔒 Cerrar<span style="font-size:9px">día</span></button>
     <button id="mob-btn-ingresar" onclick="requestAcceso()" style="flex:1;min-width:90px;padding:7px 4px;background:#1a1a2e;color:#fff;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:flex">🔐 Ingresar<span style="font-size:9px">perfil</span></button>
     <button id="mob-btn-salir" onclick="salirAdmin()" style="flex:1;min-width:90px;padding:7px 4px;background:#666;color:#fff;font-size:11px;font-weight:600;border-radius:8px;border:none;flex-direction:column;display:none">✕ Salir<span style="font-size:9px">sesión</span></button>
@@ -558,6 +560,19 @@ canvas#overlay{position:absolute;top:0;left:0;z-index:10}
 </div>
 
 <!-- Modal Detalle por tipología -->
+<!-- Modal Tiempos de subsanación -->
+<div id="tiempos-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;display:none;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:20px 16px;width:620px;max-width:98vw;max-height:88vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h2 style="font-size:15px;font-weight:700;color:#1a1a2e">⏱ Tiempos de subsanación</h2>
+      <button onclick="document.getElementById(&#39;tiempos-modal&#39;).style.display=&#39;none&#39;" style="border:none;background:none;font-size:18px;cursor:pointer;color:#888">✕</button>
+    </div>
+    <p style="font-size:11px;color:#888;margin-bottom:12px">Días hábiles entre un estado y el siguiente. No cuentan sábados, domingos ni feriados.</p>
+    <div id="tiempos-tabs" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap"></div>
+    <div id="tiempos-contenido"></div>
+  </div>
+</div>
+
 <div id="detalle-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:4000;display:none;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:14px;padding:22px;width:420px;max-width:97vw;max-height:90vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
@@ -2531,6 +2546,147 @@ window.borrarHistorial = async () => {
   const { remove: fbRemove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
   await fbRemove(cierreRef);
   showToast('🗑 Historial borrado', '#c0392b');
+};
+
+// ── Tiempos de subsanación ────────────────────────────
+// Días HÁBILES entre el fichaje y la recepción de cada tramo.
+let tiempoTramo = 'R1I';
+const TIEMPO_TRAMOS = {
+  R1I:  { label:'R1 Interior',            tipo:'viviendas', desde:'R1F',  hasta:'R1',   col:'#27500A' },
+  RFS:  { label:'RF Int · subsanación',   tipo:'viviendas', desde:'RFF',  hasta:'RFO',  col:'#4A148C' },
+  RFR:  { label:'RF Int · recepción',     tipo:'viviendas', desde:'RFO',  hasta:'RF',   col:'#6C2A8C' },
+  RFT:  { label:'RF Int · total',         tipo:'viviendas', desde:'RFF',  hasta:'RF',   col:'#1a1a2e' },
+  R1E:  { label:'R1 Exterior',            tipo:'patios',    desde:'R1EF', hasta:'R1E',  col:'#A85A00' },
+  RFE:  { label:'RF Exterior',            tipo:'patios',    desde:'RFEF', hasta:'RFE',  col:'#5C4A00' },
+};
+const FECHA_SIN_ORIGEN = '2000-01-01'; // marca de los datos previos al registro por fecha
+
+// Días hábiles entre dos fechas ISO (sin contar el día del fichaje)
+function diasHabiles(desdeISO, hastaISO){
+  const a = new Date(desdeISO + 'T12:00:00');
+  const b = new Date(hastaISO + 'T12:00:00');
+  if (b < a) return null;
+  const fmt = dt => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  let n = 0;
+  const d = new Date(a);
+  while (d < b){
+    d.setDate(d.getDate() + 1);
+    const dow = d.getDay();
+    if (dow === 0 || dow === 6) continue;
+    if (FERIADOS.has(fmt(d))) continue;
+    n++;
+  }
+  return n;
+}
+
+// Filas del tramo activo: {num, desde, hasta, dias, sinOrigen}
+function filasTiempo(){
+  const cfg = TIEMPO_TRAMOS[tiempoTramo];
+  const objetos = cfg.tipo === 'viviendas' ? Object.values(houses) : Object.values(patios);
+  const out = [];
+  objetos.forEach(o => {
+    if (!o.pts || o.pts.length < 3) return;
+    let fDesde = null, fHasta = null;
+    if (cfg.tipo === 'viviendas'){
+      const rd = o.rankDates || {};
+      fDesde = rd[cfg.desde]; fHasta = rd[cfg.hasta];
+    } else {
+      fDesde = o[PATIO_FIELDS[cfg.desde][1]];
+      fHasta = o[PATIO_FIELDS[cfg.hasta][1]];
+    }
+    if (!fDesde || !fHasta) return;
+    const sinOrigen = (fDesde === FECHA_SIN_ORIGEN);
+    out.push({
+      num: o.num || (cfg.tipo === 'patios' ? 'Patio' : '?'),
+      desde: fDesde, hasta: fHasta,
+      dias: sinOrigen ? null : diasHabiles(fDesde, fHasta),
+      sinOrigen,
+    });
+  });
+  // más lento primero, y los sin origen al final
+  out.sort((a,b) => (a.dias===null) - (b.dias===null) || (b.dias||0) - (a.dias||0));
+  return out;
+}
+
+const fmtFechaCL = iso => { const [y,m,d] = iso.split('-'); return `${d}-${m}-${y}`; };
+
+window.setTiempoTramo = (t) => { tiempoTramo = t; pintarTiempos(); };
+
+function pintarTiempos(){
+  const cfg = TIEMPO_TRAMOS[tiempoTramo];
+  const tabs = document.getElementById('tiempos-tabs');
+  if (tabs) tabs.innerHTML = Object.entries(TIEMPO_TRAMOS).map(([k,c]) =>
+    `<button class="fase-btn${k===tiempoTramo?' active':''}" onclick="setTiempoTramo('${k}')">${c.label}</button>`).join('');
+
+  const filas = filasTiempo();
+  const validas = filas.filter(f => f.dias !== null);
+  const dias = validas.map(f => f.dias);
+  const prom = dias.length ? (dias.reduce((a,b)=>a+b,0) / dias.length) : null;
+  const mediana = (() => {
+    if (!dias.length) return null;
+    const o = [...dias].sort((a,b)=>a-b), m = Math.floor(o.length/2);
+    return o.length % 2 ? o[m] : (o[m-1]+o[m])/2;
+  })();
+
+  const div = document.getElementById('tiempos-contenido');
+  if (!div) return;
+  if (!filas.length){
+    div.innerHTML = `<p style="color:#aaa;text-align:center;font-size:13px;padding:20px 0">
+      Todavía no hay ${cfg.label} con fichaje y recepción registrados.</p>`;
+    return;
+  }
+
+  const tarjeta = (titulo, valor, sub, color) => `
+    <div style="flex:1;min-width:120px;background:${eqRgba(color,0.10)};border-radius:10px;padding:11px 13px">
+      <div style="font-size:11px;color:${color};font-weight:600">${titulo}</div>
+      <div style="font-size:26px;font-weight:700;color:${color};line-height:1.15">${valor}</div>
+      <div style="font-size:10px;color:#999">${sub}</div>
+    </div>`;
+
+  let html = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+    ${tarjeta('Promedio', prom===null?'—':prom.toFixed(1), 'días hábiles', cfg.col)}
+    ${tarjeta('Mediana', mediana===null?'—':mediana, 'días hábiles', cfg.col)}
+    ${tarjeta('Más rápido', dias.length?Math.min(...dias):'—', 'días hábiles', '#27500A')}
+    ${tarjeta('Más lento', dias.length?Math.max(...dias):'—', 'días hábiles', '#c0392b')}
+    ${tarjeta('Medidas', validas.length, `de ${filas.length} con registro`, '#555')}
+  </div>`;
+
+  html += `<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr style="background:#f5f3ef">
+      <th style="padding:6px 8px;text-align:left;color:#666;font-weight:600;border-bottom:1px solid #eee">Lote</th>
+      <th style="padding:6px 8px;text-align:center;color:#666;font-weight:600;border-bottom:1px solid #eee">Desde</th>
+      <th style="padding:6px 8px;text-align:center;color:#666;font-weight:600;border-bottom:1px solid #eee">Hasta</th>
+      <th style="padding:6px 8px;text-align:center;color:#666;font-weight:600;border-bottom:1px solid #eee">Días hábiles</th>
+    </tr></thead><tbody>`;
+
+  filas.forEach((f,i) => {
+    const bg = i % 2 ? '#fafafa' : '#fff';
+    if (f.sinOrigen){
+      html += `<tr style="background:${bg};color:#bbb">
+        <td style="padding:5px 8px;border-bottom:1px solid #f0f0f0">${f.num}</td>
+        <td colspan="2" style="padding:5px 8px;text-align:center;border-bottom:1px solid #f0f0f0;font-size:11px">sin fecha de origen</td>
+        <td style="padding:5px 8px;text-align:center;border-bottom:1px solid #f0f0f0">—</td></tr>`;
+      return;
+    }
+    const alerta = prom !== null && f.dias > prom * 1.5;
+    html += `<tr style="background:${bg}">
+      <td style="padding:5px 8px;border-bottom:1px solid #f0f0f0;font-weight:600;color:#333">${f.num}</td>
+      <td style="padding:5px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:#777">${fmtFechaCL(f.desde)}</td>
+      <td style="padding:5px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:#777">${fmtFechaCL(f.hasta)}</td>
+      <td style="padding:5px 8px;text-align:center;border-bottom:1px solid #f0f0f0;font-weight:700;color:${alerta?'#c0392b':cfg.col}">${f.dias}</td></tr>`;
+  });
+
+  html += `</tbody><tfoot><tr style="background:#f5f3ef">
+    <td colspan="3" style="padding:7px 8px;font-weight:700;color:#333">PROMEDIO</td>
+    <td style="padding:7px 8px;text-align:center;font-weight:700;font-size:14px;color:${cfg.col}">${prom===null?'—':prom.toFixed(1)}</td>
+  </tr></tfoot></table>`;
+
+  div.innerHTML = html;
+}
+
+window.verTiempos = () => {
+  pintarTiempos();
+  document.getElementById('tiempos-modal').style.display = 'flex';
 };
 
 window.verDetalle = () => {
