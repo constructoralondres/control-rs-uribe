@@ -11,6 +11,7 @@ body{font-family:system-ui,sans-serif;background:#f5f3ef;height:100vh;display:fl
 .kpi{flex:1 1 92px;min-width:92px;background:#fff;border:1px solid #e6e2d8;border-radius:10px;padding:8px 6px;text-align:center}
 .kpi-n{font-size:21px;font-weight:800;line-height:1.1}
 .kpi-l{font-size:9.5px;color:#777;font-weight:600;letter-spacing:.01em;margin-top:2px;line-height:1.25}
+.kpi-sw{display:block;margin:4px auto 0}
 .kpi-total{background:#1a1a2e;border-color:#1a1a2e}
 .kpi-total .kpi-n{color:#fff}
 .kpi-total .kpi-l{color:#bbb}
@@ -1064,16 +1065,16 @@ function showPruebaCtxMenu(mx,my,h){
 // Todo el proyecto en una sola imagen: totales, plano completo y leyenda.
 const RES_KPIS = [
   { k:'total', label:'Total viviendas', col:'#fff',    total:true },
-  { k:'R0',    label:'R0 Interior',     col:'#0C447C' },
-  { k:'R1F',   label:'R1 Int. Fichaje', col:'#00695C' },
-  { k:'R1',    label:'R1 Int. Recibida',col:'#27500A' },
-  { k:'RFF',   label:'RF Int. Fichaje', col:'#6C2A8C' },
-  { k:'RFO',   label:'RF Int. Obs. Corr.',col:'#4A148C' },
-  { k:'RF',    label:'RF Int. Recibida',col:'#1a1a2e' },
-  { k:'R1EF',  label:'R1 Ext. Fichaje', col:'#A85A00' },
-  { k:'R1E',   label:'R1 Ext. Recibido',col:'#8a7000' },
-  { k:'RFEF',  label:'RF Ext. Fichaje', col:'#7a6000' },
-  { k:'RFE',   label:'RF Ext. Recibido',col:'#5C4A00' },
+  { k:'R0',    label:'R0 Interior',       col:'#0C447C', sw:'#0C447C', f:'contorno' },
+  { k:'R1F',   label:'R1 Int. Fichaje',   col:'#00695C', sw:'#00695C', f:'aspa' },
+  { k:'R1',    label:'R1 Int. Recibida',  col:'#27500A', sw:'#27500A', f:'malla' },
+  { k:'RFF',   label:'RF Int. Fichaje',   col:'#6C2A8C', sw:'#6C2A8C', f:'circulo' },
+  { k:'RFO',   label:'RF Int. Obs. Corr.',col:'#4A148C', sw:'#4A148C', f:'obs' },
+  { k:'RF',    label:'RF Int. Recibida',  col:'#1a1a2e', sw:'#1a1a2e', f:'tick' },
+  { k:'R1EF',  label:'R1 Ext. Fichaje',   col:'#A85A00', sw:'#A85A00', f:'punteado' },
+  { k:'R1E',   label:'R1 Ext. Recibido',  col:'#8a7000', sw:'#8a7000', f:'achurado' },
+  { k:'RFEF',  label:'RF Ext. Fichaje',   col:'#7a6000', sw:'#7a6000', f:'grueso' },
+  { k:'RFE',   label:'RF Ext. Recibido',  col:'#5C4A00', sw:'#5C4A00', f:'solido' },
 ];
 // Leyenda: se arma como un SVG único, que sirve en pantalla y dentro del PNG
 const RES_LEYENDA = [
@@ -1124,13 +1125,11 @@ function pintarResumen(){
       const val = k.total ? c.total : (c[k.k] || 0);
       return `<div class="kpi${k.total?' kpi-total':''}">
         <div class="kpi-n" style="${k.total?'':'color:'+k.col}">${val}</div>
-        <div class="kpi-l">${k.label}</div></div>`;
+        <div class="kpi-l">${k.label}</div>
+        ${k.f ? `<svg class="kpi-sw" width="32" height="22">${swatchSVG(k.f, k.sw)}</svg>` : ''}</div>`;
     }).join('')
     + `<div style="display:flex;align-items:center;padding-left:4px"><button id="btn-png" onclick="descargarResumen()">⬇ Descargar PNG</button></div>`;
   }
-  const ley = document.getElementById('resumen-leyenda');
-  if (ley) ley.innerHTML = RES_LEYENDA.map(l =>
-    `<span class="lg"><svg width="32" height="24">${swatchSVG(l.f, l.c)}</svg>${l.t}</span>`).join('');
 }
 
 // Compone el PNG: encabezado + totales + plano + leyenda
@@ -1148,8 +1147,8 @@ window.descargarResumen = () => {
     const corte = Math.max(0, Math.min(offX - margen, ov.width - anchoPlano - margen*2));
     const W = Math.round(Math.min(ov.width, anchoPlano + margen*2));
     const hEnc = Math.round(W * 0.042);
-    const hKpi = Math.round(W * 0.062);
-    const hLey = Math.round(W * 0.032);
+    const hKpi = Math.round(W * 0.085);
+    const hLey = 0;
     const out = document.createElement('canvas');
     out.width = W; out.height = hEnc + hKpi + ov.height + hLey;
     const g = out.getContext('2d');
@@ -1170,11 +1169,13 @@ window.descargarResumen = () => {
 
     // Totales
     const c = getCounts();
-    const cajas = RES_KPIS.map(k => ({ n: k.total ? c.total : (c[k.k]||0), l: k.label, col: k.total ? '#fff' : k.col, bg: k.total ? '#1a1a2e' : '#fff' }));
+    const cajas = RES_KPIS.map(k => ({ n: k.total ? c.total : (c[k.k]||0), l: k.label, col: k.total ? '#fff' : k.col, bg: k.total ? '#1a1a2e' : '#fff', f: k.f, sw: k.sw }));
     const gap = 8, m = 16;
     const bw = (W - m*2 - gap*(cajas.length-1)) / cajas.length;
+    const posCajas = [];
     cajas.forEach((b, i) => {
       const x = m + i*(bw+gap), y = hEnc + 8, bh = hKpi - 16;
+      posCajas.push({x, y, bw, bh, f:b.f, sw:b.sw});
       g.fillStyle = b.bg; g.strokeStyle = b.bg === '#fff' ? '#e6e2d8' : b.bg;
       g.lineWidth = 1;
       g.beginPath(); g.roundRect(x, y, bw, bh, 8); g.fill(); g.stroke();
@@ -1183,7 +1184,7 @@ window.descargarResumen = () => {
       g.fillText(String(b.n), x + bw/2, y + bh*0.38);
       g.fillStyle = b.bg === '#1a1a2e' ? '#bbb' : '#777';
       g.font = `600 ${Math.round(bh*0.19)}px system-ui`;
-      g.fillText(b.l, x + bw/2, y + bh*0.76);
+      g.fillText(b.l, x + bw/2, y + bh*0.62);
     });
 
     // Plano + polígonos
@@ -1192,22 +1193,17 @@ window.descargarResumen = () => {
     g.drawImage(document.getElementById('plano'), offX - corte, yPlano + offY, anchoPlano, IMG_H*scale);
     g.drawImage(ov, corte, 0, W, ov.height, 0, yPlano, W, ov.height);
 
-    // Leyenda, desde el mismo SVG que se ve en pantalla
-    const yLey = yPlano + ov.height;
-    g.fillStyle = '#fafaf8'; g.fillRect(0, yLey, W, hLey);
-    const anchoItem = (W - 32) / RES_LEYENDA.length;
-    const esc = Math.min(1.5, anchoItem / 150);
-    const piezas = RES_LEYENDA.map((l, i) => {
-      const x = 16 + i*anchoItem;
-      return `<g transform="translate(${x},${(hLey-24*esc)/2}) scale(${esc})">${swatchSVG(l.f, l.c)}
-        <text x="36" y="16" font-family="system-ui" font-size="12" fill="#555">${l.t}</text></g>`;
+    // Símbolo de cada estado, dentro de su propia caja
+    const piezas = posCajas.filter(b => b.f).map(b => {
+      const sw = Math.min(b.bw*0.5, b.bh*0.34);
+      const esc = sw / 32;
+      const px = b.x + (b.bw - 32*esc)/2;
+      const py = b.y + b.bh*0.68;
+      return `<g transform="translate(${px},${py}) scale(${esc})">${swatchSVG(b.f, b.sw)}</g>`;
     }).join('');
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${hLey}">${piezas}</svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${hEnc + hKpi}">${piezas}</svg>`;
     const img = new Image();
-    img.onload = () => {
-      g.drawImage(img, 0, yLey);
-      cerrarPng(out, now);
-    };
+    img.onload = () => { g.drawImage(img, 0, 0); cerrarPng(out, now); };
     img.onerror = () => cerrarPng(out, now);
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 
@@ -1235,7 +1231,7 @@ window.setVista = (v) => {
   const rk = document.getElementById('resumen-kpis');
   const rl = document.getElementById('resumen-leyenda');
   if (rk) rk.style.display = v==='resumen' ? 'flex' : 'none';
-  if (rl) rl.style.display = v==='resumen' ? 'flex' : 'none';
+  if (rl) rl.style.display = 'none';   // la simbología vive dentro de cada tarjeta
   const sb = document.getElementById('sidebar');
   if (sb) sb.style.display = v==='resumen' ? 'none' : '';
   if (v==='resumen'){ pintarResumen(); setTimeout(resetView, 30); }
