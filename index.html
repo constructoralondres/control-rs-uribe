@@ -1181,10 +1181,10 @@ window.descargarResumen = () => {
       g.beginPath(); g.roundRect(x, y, bw, bh, 8); g.fill(); g.stroke();
       g.fillStyle = b.col; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.font = `800 ${Math.round(bh*0.42)}px system-ui`;
-      g.fillText(String(b.n), x + bw/2, y + bh*0.38);
+      g.fillText(String(b.n), x + bw/2, y + bh*0.26);
       g.fillStyle = b.bg === '#1a1a2e' ? '#bbb' : '#777';
       g.font = `600 ${Math.round(bh*0.19)}px system-ui`;
-      g.fillText(b.l, x + bw/2, y + bh*0.62);
+      g.fillText(b.l, x + bw/2, y + bh*0.52);
     });
 
     // Plano + polígonos
@@ -1195,10 +1195,10 @@ window.descargarResumen = () => {
 
     // Símbolo de cada estado, dentro de su propia caja
     const piezas = posCajas.filter(b => b.f).map(b => {
-      const sw = Math.min(b.bw*0.5, b.bh*0.34);
+      const sw = Math.min(b.bw*0.46, b.bh*0.32);
       const esc = sw / 32;
       const px = b.x + (b.bw - 32*esc)/2;
-      const py = b.y + b.bh*0.68;
+      const py = b.y + b.bh*0.62;
       return `<g transform="translate(${px},${py}) scale(${esc})">${swatchSVG(b.f, b.sw)}</g>`;
     }).join('');
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${hEnc + hKpi}">${piezas}</svg>`;
