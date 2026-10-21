@@ -1120,16 +1120,12 @@ function pintarResumen(){
   const c = getCounts();
   const kpis = document.getElementById('resumen-kpis');
   if (kpis){
-    const pct = c.total ? Math.round(c.RF * 100 / c.total) : 0;
     kpis.innerHTML = RES_KPIS.map(k => {
       const val = k.total ? c.total : (c[k.k] || 0);
       return `<div class="kpi${k.total?' kpi-total':''}">
         <div class="kpi-n" style="${k.total?'':'color:'+k.col}">${val}</div>
         <div class="kpi-l">${k.label}</div></div>`;
     }).join('')
-    + `<div class="kpi" style="background:#EAF3DE;border-color:#cfe0b8">
-        <div class="kpi-n" style="color:#27500A">${pct}%</div>
-        <div class="kpi-l">Avance a RF Int.</div></div>`
     + `<div style="display:flex;align-items:center;padding-left:4px"><button id="btn-png" onclick="descargarResumen()">⬇ Descargar PNG</button></div>`;
   }
   const ley = document.getElementById('resumen-leyenda');
@@ -1174,9 +1170,7 @@ window.descargarResumen = () => {
 
     // Totales
     const c = getCounts();
-    const pct = c.total ? Math.round(c.RF * 100 / c.total) : 0;
     const cajas = RES_KPIS.map(k => ({ n: k.total ? c.total : (c[k.k]||0), l: k.label, col: k.total ? '#fff' : k.col, bg: k.total ? '#1a1a2e' : '#fff' }));
-    cajas.push({ n: pct + '%', l: 'Avance a RF Int.', col: '#27500A', bg: '#EAF3DE' });
     const gap = 8, m = 16;
     const bw = (W - m*2 - gap*(cajas.length-1)) / cajas.length;
     cajas.forEach((b, i) => {
