@@ -1973,6 +1973,23 @@ function canLowerRank(h, targetRank) {
   return true;
 }
 
+// Rango al que se puede volver sin tocar días ya cerrados.
+// Todo lo marcado HOY se puede deshacer; lo de días cerrados queda firme.
+function rangoProtegido(h) {
+  if (!isTerreno) return 0;           // el admin puede limpiar todo
+  if (!lastCierreDate) return 0;      // sin cierres, nada está firme
+  const hoy = getTodayISO();
+  const rd = rankDatesOf(h);
+  const cur = STATE_RANK[h.state || 'ND'];
+  let r = 0;
+  for (let i = 0; i < cur; i++) {
+    const d = rd[RANK_KEYS[i]];
+    if (!d || (d < hoy && d <= lastCierreDate)) r = i + 1;
+  }
+  return r;
+}
+const nombreRango = (r) => r === 0 ? 'Sin estado' : RANK_KEYS[r-1];
+
 function isLockedForTerreno(h) {
   if (!isTerreno) return false;
   if (!h.state || h.state === 'ND') return false;
@@ -2004,7 +2021,9 @@ function showCtxMenu(mx,my,h){
   const ttl=document.createElement('div'); ttl.className='ctx-ttl';
   ttl.textContent=`Vivienda ${h.num||'?'} — ${RS_FASES[faseRs].label}`;
   ctxMenu.appendChild(ttl);
-  const locked = isLockedForTerreno(h);
+  const destinoLimpiar = rangoProtegido(h);
+  // Solo se bloquea si no queda nada marcado hoy por deshacer
+  const locked = destinoLimpiar >= STATE_RANK[h.state || 'ND'];
   [['R0','🔵 Marcar R0'],['R1F','📝 Marcar R1 Interior Fichaje'],['R1','🟢 Marcar R1 Interior Recibida'],['RFF','📝 Marcar RF Interior Fichaje'],['RFO','🟣 Marcar RF Interior Obs. Corregidas'],['RF','✅ Marcar RF Interior Recibida']]
    .filter(([st]) => enFase(st)).forEach(([st,label])=>{
     const b=document.createElement('button');
@@ -2028,15 +2047,28 @@ function showCtxMenu(mx,my,h){
   const sep0=document.createElement('div'); sep0.className='sep'; ctxMenu.appendChild(sep0);
   const bclear=document.createElement('button');
   if(locked){
-    bclear.textContent='🔒 Bloqueado (cierre de día registrado)';
+    bclear.textContent='🔒 Sin cambios de hoy por deshacer';
     bclear.style.color='#bbb';
     bclear.style.fontSize='11px';
     bclear.style.cursor='not-allowed';
     bclear.disabled=true;
   } else {
-    bclear.textContent='↩ Limpiar estado';
+    bclear.textContent = destinoLimpiar === 0
+      ? '↩ Limpiar estado'
+      : `↩ Deshacer lo marcado hoy (vuelve a ${nombreRango(destinoLimpiar)})`;
     bclear.style.color='#888';
-    bclear.onclick=()=>{ update(ref(db,'uribe/v2/'+h.id),{state:'ND',stateDate:null,rankDates:null}); ctxMenu.style.display='none'; };
+    bclear.onclick=()=>{
+      if (destinoLimpiar === 0){
+        update(ref(db,'uribe/v2/'+h.id),{state:'ND',stateDate:null,rankDates:null});
+      } else {
+        update(ref(db,'uribe/v2/'+h.id),{
+          state: RANK_KEYS[destinoLimpiar-1],
+          stateDate: getTodayISO(),
+          rankDates: computeRankDatesForLower(h, destinoLimpiar),
+        });
+      }
+      ctxMenu.style.display='none';
+    };
   }
   ctxMenu.appendChild(bclear);
   if(isAdmin){
@@ -2248,6 +2280,18 @@ function showPatioCtxMenu(mx,my,p){
     return true;
   }
 
+  // Hasta dónde se puede deshacer en este patio: lo de hoy sí, lo ya cerrado no
+  function rangoProtegidoPatio(){
+    if (!isTerreno) return 0;
+    if (!lastCierreDate) return 0;
+    let r = 0;
+    for (let i = 0; i < curRank; i++){
+      const d = p[PATIO_FIELDS[PATIO_RANK_KEYS[i]][1]];
+      if (!d || (d < today && d <= lastCierreDate)) r = i + 1;
+    }
+    return r;
+  }
+
   // Deja el patio exactamente en el rango pedido (marca lo anterior, limpia lo posterior)
   function setPatioRank(target){
     const datos = {};
@@ -2281,13 +2325,16 @@ function showPatioCtxMenu(mx,my,p){
 
   const sepP=document.createElement('div'); sepP.className='sep'; ctxMenu.appendChild(sepP);
   const bclear=document.createElement('button');
-  if(curRank>0 && !canLowerPatio(0)){
-    bclear.textContent='🔒 Bloqueado (cierre de día registrado)';
+  const destinoPatio = rangoProtegidoPatio();
+  if(curRank > 0 && destinoPatio >= curRank){
+    bclear.textContent='🔒 Sin cambios de hoy por deshacer';
     bclear.style.color='#bbb'; bclear.style.fontSize='11px'; bclear.style.cursor='not-allowed'; bclear.disabled=true;
   } else {
-    bclear.textContent='↩ Limpiar estado';
+    bclear.textContent = destinoPatio === 0
+      ? '↩ Limpiar estado'
+      : `↩ Deshacer lo marcado hoy (vuelve a ${PATIO_RANK_KEYS[destinoPatio-1]})`;
     bclear.style.color='#888';
-    bclear.onclick=()=>setPatioRank(0);
+    bclear.onclick=()=>setPatioRank(destinoPatio);
   }
   ctxMenu.appendChild(bclear);
   // Botón copiar forma (solo admin)
